@@ -1,6 +1,6 @@
 {
   "name": "ex-cerebrum",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Chess bot that plays on Lichess.org",
   "main": "index.js",
   "scripts": {
@@ -10,8 +10,8 @@
     "type": "git",
     "url": "git+https://github.com/campovski/ex-cerebrum.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["lichess", "bot"],
+  "author": "campovski",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/campovski/ex-cerebrum/issues"
