@@ -16,5 +16,14 @@
         "ecmaVersion": 2018
     },
     "rules": {
+        "indent": ["error", 4],
+        "no-undef": "error",
+        "no-unexpected-multiline": "error",
+        "no-unreachable": "error",
+        "no-unused-vars": "error",
+        "require-jsdoc": "error",
+        "semi": ["error", "always"],
+        "space-before-function-paren": "off",
+        "valid-jsdoc": "error"
     }
 }
