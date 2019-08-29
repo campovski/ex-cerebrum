@@ -1,5 +1,6 @@
 const axios = require('axios');
 const https = require('https');
+const processor = require('./processor');
 
 function getProfileData() {
     return axios.get(
@@ -130,7 +131,7 @@ function getStreamGameState(gameId) {
             res.on('data', (chunk) => {
                 const data = chunk.toString();
                 if (data.length > 1) {
-                    processGameStateEvent(data);
+                    processor.processGameState(JSON.parse(data));
                 }
             });
             res.on('end', () => {
@@ -139,10 +140,6 @@ function getStreamGameState(gameId) {
             });
         });
     });
-}
-
-function processGameStateEvent(data) {
-    console.log(data);
 }
 
 function makeMove(gameId, move) {
