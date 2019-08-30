@@ -1,52 +1,109 @@
 const c = require('./constants');
 
+/**
+ * Implementation of chess game. Contains data about players, current position,
+ * remaining time of each player, increment.
+ */
 class Game {
+    /**
+     * Game constructor. Save important data from game stream.
+     *
+     * Data looks like this:
+     * { id: 'dnLnH9v7',
+     *   variant: { key: 'standard', name: 'Standard', short: 'Std' },
+     *   clock: { initial: 10800000, increment: 0 },
+     *   speed: 'classical',
+     *   perf: { name: 'Classical' },
+     *   rated: false,
+     *   createdAt: 1567110134794,
+     *   white:
+     *    { id: 'excerebrum',
+     *      name: 'ExCerebrum',
+     *      title: 'BOT',
+     *      rating: 1500,
+     *      provisional: true },
+     *   black:
+     *    { id: 'makedonium',
+     *      name: 'Makedonium',
+     *      title: null,
+     *      rating: 2100,
+     *      provisional: true },
+     *   initialFen: 'startpos',
+     *   type: 'gameFull',
+     *   state:
+     *    { type: 'gameState',
+     *      moves: '',
+     *      wtime: 10800000,
+     *      btime: 10800000,
+     *      winc: 0,
+     *      binc: 0,
+     *      bdraw: false,
+     *      wdraw: false } }
+     *
+     * @param {object} gameData - contains game data like gameId, TC, variant, etc.
+     */
     constructor(gameData) {
-        this.board = this.initBoard(gameData['variant']['key']);
-        this.timeWhite = gameData['timeControl']['limit'];
-        this.timeBlack = gameData['timeControl']['limit'];
-        this.increment = gameData['timeControl']['increment'];
+        this.initBoard(gameData['variant']['key']);
+        this.id = gameData['id'];
+        this.timeWhite = gameData['clock']['initial'];
+        this.timeBlack = gameData['clock']['initial'];
+        this.increment = gameData['clock']['increment'];
+        this.isRated = gameData['rated'];
+        this.playerWhite = gameData['white'];
+        this.playerBlack = gameData['black'];
     }
 
+    /**
+     * Initializes board as 2D array.
+     *
+     * @param {string} variant - what variant is being played
+     * @returns {void}
+     * @throws Error when unknown variant is specified
+     */
     initBoard(variant) {
         switch (variant) {
             case 'standard':
             case 'kingOfTheHill':
             case 'antichess':
-                const board = Array.from(Array(8), _ => Array(8).fill(c.EMPTY));
+                this.board = Array.from(Array(8), _ => Array(8).fill(c.EMPTY));
 
                 for (let file = c.FILE_A; file <= c.FILE_H; file++) {
-                    board[c.RANK_2][file] = c.W_PAWN;
-                    board[c.RANK_7][file] = c.B_PAWN;
+                    this.board[c.RANK_2][file] = c.W_PAWN;
+                    this.board[c.RANK_7][file] = c.B_PAWN;
                 }
 
-                board[c.RANK_1][c.FILE_A] = c.W_ROOK;
-                board[c.RANK_1][c.FILE_B] = c.W_KNIGHT;
-                board[c.RANK_1][c.FILE_C] = c.W_BISHOP;
-                board[c.RANK_1][c.FILE_D] = c.W_QUEEN;
-                board[c.RANK_1][c.FILE_E] = c.W_KING;
-                board[c.RANK_1][c.FILE_F] = c.W_BISHOP;
-                board[c.RANK_1][c.FILE_G] = c.W_KNIGHT;
-                board[c.RANK_1][c.FILE_H] = c.W_ROOK;
+                this.board[c.RANK_1][c.FILE_A] = c.W_ROOK;
+                this.board[c.RANK_1][c.FILE_B] = c.W_KNIGHT;
+                this.board[c.RANK_1][c.FILE_C] = c.W_BISHOP;
+                this.board[c.RANK_1][c.FILE_D] = c.W_QUEEN;
+                this.board[c.RANK_1][c.FILE_E] = c.W_KING;
+                this.board[c.RANK_1][c.FILE_F] = c.W_BISHOP;
+                this.board[c.RANK_1][c.FILE_G] = c.W_KNIGHT;
+                this.board[c.RANK_1][c.FILE_H] = c.W_ROOK;
 
-                board[c.RANK_7][c.FILE_A] = c.B_ROOK;
-                board[c.RANK_7][c.FILE_B] = c.B_KNIGHT;
-                board[c.RANK_7][c.FILE_C] = c.B_BISHOP;
-                board[c.RANK_7][c.FILE_D] = c.B_QUEEN;
-                board[c.RANK_7][c.FILE_E] = c.B_KING;
-                board[c.RANK_7][c.FILE_F] = c.B_BISHOP;
-                board[c.RANK_7][c.FILE_G] = c.B_KNIGHT;
-                board[c.RANK_7][c.FILE_H] = c.B_ROOK;
-
-                return board;
-
+                this.board[c.RANK_7][c.FILE_A] = c.B_ROOK;
+                this.board[c.RANK_7][c.FILE_B] = c.B_KNIGHT;
+                this.board[c.RANK_7][c.FILE_C] = c.B_BISHOP;
+                this.board[c.RANK_7][c.FILE_D] = c.B_QUEEN;
+                this.board[c.RANK_7][c.FILE_E] = c.B_KING;
+                this.board[c.RANK_7][c.FILE_F] = c.B_BISHOP;
+                this.board[c.RANK_7][c.FILE_G] = c.B_KNIGHT;
+                this.board[c.RANK_7][c.FILE_H] = c.B_ROOK;
+                break;
             case 'racingKings':
-                return [];
+                this.board = [];
+                break;
             default:
                 throw new Error('Unknown variant!');
         }
     }
 
+    /**
+     * Updates chessboard for given move (e.g. 'e2e4').
+     *
+     * @param {string} move - 4 letter string containing move data
+     * @returns {void}
+     */
     updateBoard(move) {
         const fileFrom = parseFile(move.charAt(0));
         const rankFrom = parseRank(move.charAt(1));
@@ -58,6 +115,12 @@ class Game {
     }
 }
 
+/**
+ * For given Lichess API file notation, convert it to array index.
+ *
+ * @param {string} file - character from 'a' to 'h'
+ * @returns {number} file as array index
+ */
 function parseFile(file) {
     switch (file) {
         case c.LICHESS_FILE_A:
@@ -81,6 +144,12 @@ function parseFile(file) {
     }
 }
 
+/**
+ * Converts Lichess API rank notation (1-8) to 0-based integer.
+ *
+ * @param {string} rank - character from '1' to '8'
+ * @returns {number} rank as array index
+ */
 function parseRank(rank) {
     return parseInt(rank) - 1;
 }
