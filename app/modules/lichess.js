@@ -1,6 +1,16 @@
 const axios = require('axios');
 const https = require('https');
-const processor = require('./processor');
+const EventEmitter = require('events');
+const c = require('./constants');
+
+/**
+ * Used for emitting events from stream readers.
+ * To be used in processor module for processing
+ * stream event 'on'.
+ *
+ * @type {module:events.internal}
+ */
+const eventEmitter = new EventEmitter();
 
 function getProfileData() {
     return axios.get(
@@ -131,11 +141,12 @@ function getStreamGameState(gameId) {
             res.on('data', (chunk) => {
                 const data = chunk.toString();
                 if (data.length > 1) {
-                    processor.processGameState(JSON.parse(data));
+                    eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_DATA, JSON.parse(data));
                 }
             });
             res.on('end', () => {
-                console.log(`Game ${gameId} ended.`);
+                console.log(`Stream of game ${gameId} ended.`);
+                eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_END);
                 resolve(`Game ${gameId} ended.`);
             });
         });
@@ -186,16 +197,19 @@ function resignGame(gameId) {
     );
 }
 
-module.exports.support = {
-    getProfileData: getProfileData,
-    streamIncomingEvents: readStreamIncomingEvents,
-    processIncomingEvents: processIncomingEvents,
-    createChallenge: createChallenge,
-    acceptChallenge: acceptChallenge,
-    declineChallenge: declineChallenge,
-    getStreamGameState: getStreamGameState,
-    makeMove: makeMove,
-    writeInChat: writeInChat,
-    abortGame: abortGame,
-    resignGame: resignGame
+module.exports = {
+    emitter: eventEmitter,
+    support: {
+        getProfileData: getProfileData,
+        streamIncomingEvents: readStreamIncomingEvents,
+        processIncomingEvents: processIncomingEvents,
+        createChallenge: createChallenge,
+        acceptChallenge: acceptChallenge,
+        declineChallenge: declineChallenge,
+        getStreamGameState: getStreamGameState,
+        makeMove: makeMove,
+        writeInChat: writeInChat,
+        abortGame: abortGame,
+        resignGame: resignGame
+    }
 };

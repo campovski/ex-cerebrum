@@ -42,5 +42,8 @@ module.exports = Object.freeze({
     B_BISHOP: 22,
     B_ROOK: 23,
     B_QUEEN: 24,
-    B_KING: 25
+    B_KING: 25,
+
+    EVENT_STREAM_GAME_STATE_DATA: 'esgsd',
+    EVENT_STREAM_GAME_STATE_END: 'esgse'
 });
