@@ -48,36 +48,14 @@ function readStreamIncomingEvents() {
             res.on('data', (chunk) => {
                 const data = chunk.toString();
                 if (data.length > 1 && data.includes('{')) {
-                    res.socket.destroy();
-                    resolve(data);
+                    eventEmitter.emit(c.EVENT_STREAM_INCOMING_EVENTS_DATA, JSON.parse(data));
                 }
             });
             res.on('end', () => {
-                console.log(`Stream ended.`);
-                reject(new Error('Stream ended.'));
+                reject(new Error('[lichess.readStreamIncomingEvents] Stream ended.'));
             });
         });
     });
-}
-
-// TODO move this function into processor module
-async function processIncomingEvents() {
-    console.log('Processing incoming events ...');
-    try {
-        const data = await readStreamIncomingEvents();
-        if (data.includes('"type":"gameStart"')) {
-            const gameId = data.match(/{"type":"gameStart","game":{"id":"(.*?)"}}/)[1];
-            console.log(`Game ${gameId} started`);
-            return gameId;
-        } else {
-            const challengeId = data.match(/{"type":"challenge","challenge":{"id":"(.*?)","status":"created"/)[1];
-            console.log(`Challenge ${challengeId}`);
-            await acceptChallenge(challengeId);
-            return await processIncomingEvents(); // call again because now we expect "gameStart" event
-        }
-    } catch (error) {
-        console.log(error);
-    }
 }
 
 /**
@@ -128,7 +106,7 @@ function createChallenge(username, rated, clockLimit, clockIncrement, days, colo
  * Accept the challenge with id challengeId.
  *
  * @param {number} challengeId - ID of the challenge to be accepted
- * @returns {Promise<AxiosResponse<object>>} Promise
+ * @returns {Promise<AxiosResponse<Object>>} Promise
  */
 function acceptChallenge(challengeId) {
     console.log(`Accepting challenge ${challengeId} ...`);
@@ -146,7 +124,7 @@ function acceptChallenge(challengeId) {
  * Decline the challenge with id challengeId.
  *
  * @param {number} challengeId - ID of the challenge to be declined
- * @returns {Promise<AxiosResponse<object>>} Promise
+ * @returns {Promise<AxiosResponse<Object>>} Promise
  */
 function declineChallenge(challengeId) {
     console.log(`Declining challenge ${challengeId} ...`);
@@ -200,7 +178,7 @@ function getStreamGameState(gameId) {
  *
  * @param {number} gameId - ID of the game in which to make move
  * @param {string} move - 4 letter move in UCI format
- * @returns {Promise<AxiosResponse<object>>} Promise
+ * @returns {Promise<AxiosResponse<Object>>} Promise
  */
 function makeMove(gameId, move) {
     return axios.post(
@@ -219,7 +197,7 @@ function makeMove(gameId, move) {
  * @param {number} gameId - ID of the game
  * @param {string} room - either 'spectator' or 'player'
  * @param {string} text - write this in the chat
- * @returns {Promise<AxiosResponse<object>>} Promise
+ * @returns {Promise<AxiosResponse<Object>>} Promise
  */
 function writeInChat(gameId, room, text) {
     return axios.post(
@@ -236,7 +214,7 @@ function writeInChat(gameId, room, text) {
  * Abort the game.
  *
  * @param {number} gameId - ID of the game to be aborted
- * @returns {Promise<AxiosResponse<object>>} Promise
+ * @returns {Promise<AxiosResponse<Object>>} Promise
  */
 function abortGame(gameId) {
     return axios.post(
@@ -253,7 +231,7 @@ function abortGame(gameId) {
  * Resign the game.
  *
  * @param {number} gameId - ID of the game to be resigned
- * @returns {Promise<AxiosResponse<object>>} Promise
+ * @returns {Promise<AxiosResponse<Object>>} Promise
  */
 function resignGame(gameId) {
     return axios.post(
@@ -271,7 +249,6 @@ module.exports = {
     support: {
         getProfileData: getProfileData,
         streamIncomingEvents: readStreamIncomingEvents,
-        processIncomingEvents: processIncomingEvents,
         createChallenge: createChallenge,
         acceptChallenge: acceptChallenge,
         declineChallenge: declineChallenge,

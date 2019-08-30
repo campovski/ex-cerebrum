@@ -45,5 +45,6 @@ module.exports = Object.freeze({
     B_KING: 25,
 
     EVENT_STREAM_GAME_STATE_DATA: 'esgsd',
-    EVENT_STREAM_GAME_STATE_END: 'esgse'
+    EVENT_STREAM_GAME_STATE_END: 'esgse',
+    EVENT_STREAM_INCOMING_EVENTS_DATA: 'esied'
 });
