@@ -12,6 +12,11 @@ const c = require('./constants');
  */
 const eventEmitter = new EventEmitter();
 
+/**
+ * Get user data from Lichess.
+ *
+ * @returns {Promise<AxiosResponse<object>>} Promise to give user data
+ */
 function getProfileData() {
     return axios.get(
         '/api/account',
@@ -22,6 +27,13 @@ function getProfileData() {
     );
 }
 
+/**
+ * Reads the incoming event stream. On nonempty data, resolve
+ * the data read as string. On event 'end', reject the promise
+ * with Error.
+ *
+ * @returns {Promise<AxiosResponse<string>>} incoming event object as string
+ */
 function readStreamIncomingEvents() {
     console.log('Reading stream ...');
 
@@ -48,6 +60,7 @@ function readStreamIncomingEvents() {
     });
 }
 
+// TODO move this function into processor module
 async function processIncomingEvents() {
     console.log('Processing incoming events ...');
     try {
@@ -67,17 +80,28 @@ async function processIncomingEvents() {
     }
 }
 
-function createChallenge(username, rated, clockLimit, clockIncrement, days, color, variant) {
+/**
+ * Create challenge with given specifications. For live games provide
+ * clockLimit and clockIncrement, for correspondence set clockLimit and
+ * clockIncrement to -1 and provide days.
+ *
+ * @param {string} username - challenge user with this username
+ * @param {boolean} rated - is this game rated?
+ * @param {number} clockLimit - initial limit in seconds
+ * @param {number} clockIncrement - increment in seconds
+ * @param {number} days - for correspondence games only
+ * @param {string} color - either 'black', 'white' or 'random'
+ * @param {string} variant - variant name
+ * @returns {Promise<AxiosResponse<object>>|void} null if wrong input args, otherwise Promise
+ */
+function createChallenge(username, rated, clockLimit, clockIncrement, days, color = 'random', variant = 'standard') {
     if ((clockLimit || clockIncrement) && days) {
         console.log('Cannot supply clock and days together');
-        return null;
+        return;
     }
 
-    if (!color) color = 'random';
-    if (!variant) variant = 'standard';
-
     let requestBody = null;
-    if (clockLimit !== null && clockIncrement !== null) {
+    if (clockLimit !== -1 && clockIncrement !== -1) {
         console.log(`Challenging ${username} with time control ${clockLimit}+${clockIncrement}`);
         requestBody = `rated=${rated}&clock.limit=${clockLimit}&clock.increment=${clockIncrement}&color=${color}&variant=${variant}`;
     } else {
@@ -100,6 +124,12 @@ function createChallenge(username, rated, clockLimit, clockIncrement, days, colo
     );
 }
 
+/**
+ * Accept the challenge with id challengeId.
+ *
+ * @param {number} challengeId - ID of the challenge to be accepted
+ * @returns {Promise<AxiosResponse<object>>} Promise
+ */
 function acceptChallenge(challengeId) {
     console.log(`Accepting challenge ${challengeId} ...`);
     return axios.post(
@@ -112,6 +142,12 @@ function acceptChallenge(challengeId) {
     );
 }
 
+/**
+ * Decline the challenge with id challengeId.
+ *
+ * @param {number} challengeId - ID of the challenge to be declined
+ * @returns {Promise<AxiosResponse<object>>} Promise
+ */
 function declineChallenge(challengeId) {
     console.log(`Declining challenge ${challengeId} ...`);
     return axios.post(
@@ -124,6 +160,12 @@ function declineChallenge(challengeId) {
     );
 }
 
+/**
+ * Listens on game state stream for game events like moves, chat, etc.
+ *
+ * @param {number} gameId - ID of the game to be streamed
+ * @returns {Promise<string>} notification on event 'end'
+ */
 function getStreamGameState(gameId) {
     console.log(`Reading stream of game ${gameId} ...`);
 
@@ -153,6 +195,13 @@ function getStreamGameState(gameId) {
     });
 }
 
+/**
+ * Make move move in game with ID gameId.
+ *
+ * @param {number} gameId - ID of the game in which to make move
+ * @param {string} move - 4 letter move in UCI format
+ * @returns {Promise<AxiosResponse<object>>} Promise
+ */
 function makeMove(gameId, move) {
     return axios.post(
         `/api/bot/game/${gameId}/move/${move}`,
@@ -164,6 +213,14 @@ function makeMove(gameId, move) {
     );
 }
 
+/**
+ * Write in chat of game with ID gameId with given room specifier.
+ *
+ * @param {number} gameId - ID of the game
+ * @param {string} room - either 'spectator' or 'player'
+ * @param {string} text - write this in the chat
+ * @returns {Promise<AxiosResponse<object>>} Promise
+ */
 function writeInChat(gameId, room, text) {
     return axios.post(
         `/api/bot/game/${gameId}/chat`,
@@ -175,6 +232,12 @@ function writeInChat(gameId, room, text) {
     );
 }
 
+/**
+ * Abort the game.
+ *
+ * @param {number} gameId - ID of the game to be aborted
+ * @returns {Promise<AxiosResponse<object>>} Promise
+ */
 function abortGame(gameId) {
     return axios.post(
         `/api/bot/game/${gameId}/abort`,
@@ -186,6 +249,12 @@ function abortGame(gameId) {
     );
 }
 
+/**
+ * Resign the game.
+ *
+ * @param {number} gameId - ID of the game to be resigned
+ * @returns {Promise<AxiosResponse<object>>} Promise
+ */
 function resignGame(gameId) {
     return axios.post(
         `/api/bot/game/${gameId}/resign`,
