@@ -105,7 +105,7 @@ function createChallenge(username, rated, clockLimit, clockIncrement, days, colo
 /**
  * Accept the challenge with id challengeId.
  *
- * @param {number} challengeId - ID of the challenge to be accepted
+ * @param {string} challengeId - ID of the challenge to be accepted
  * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function acceptChallenge(challengeId) {
@@ -123,7 +123,7 @@ function acceptChallenge(challengeId) {
 /**
  * Decline the challenge with id challengeId.
  *
- * @param {number} challengeId - ID of the challenge to be declined
+ * @param {string} challengeId - ID of the challenge to be declined
  * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function declineChallenge(challengeId) {
@@ -141,7 +141,7 @@ function declineChallenge(challengeId) {
 /**
  * Listens on game state stream for game events like moves, chat, etc.
  *
- * @param {number} gameId - ID of the game to be streamed
+ * @param {string} gameId - ID of the game to be streamed
  * @returns {Promise<string>} notification on event 'end'
  */
 function getStreamGameState(gameId) {
@@ -176,7 +176,7 @@ function getStreamGameState(gameId) {
 /**
  * Make move move in game with ID gameId.
  *
- * @param {number} gameId - ID of the game in which to make move
+ * @param {string} gameId - ID of the game in which to make move
  * @param {string} move - 4 letter move in UCI format
  * @returns {Promise<AxiosResponse<object>>} Promise
  */
@@ -194,7 +194,7 @@ function makeMove(gameId, move) {
 /**
  * Write in chat of game with ID gameId with given room specifier.
  *
- * @param {number} gameId - ID of the game
+ * @param {string} gameId - ID of the game
  * @param {string} room - either 'spectator' or 'player'
  * @param {string} text - write this in the chat
  * @returns {Promise<AxiosResponse<object>>} Promise
@@ -213,7 +213,7 @@ function writeInChat(gameId, room, text) {
 /**
  * Abort the game.
  *
- * @param {number} gameId - ID of the game to be aborted
+ * @param {string} gameId - ID of the game to be aborted
  * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function abortGame(gameId) {
@@ -230,7 +230,7 @@ function abortGame(gameId) {
 /**
  * Resign the game.
  *
- * @param {number} gameId - ID of the game to be resigned
+ * @param {string} gameId - ID of the game to be resigned
  * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function resignGame(gameId) {
