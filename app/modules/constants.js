@@ -46,5 +46,11 @@ module.exports = Object.freeze({
 
     EVENT_STREAM_GAME_STATE_DATA: 'esgsd',
     EVENT_STREAM_GAME_STATE_END: 'esgse',
-    EVENT_STREAM_INCOMING_EVENTS_DATA: 'esied'
+    EVENT_STREAM_INCOMING_EVENTS_DATA: 'esied',
+
+    GAME_STATUS_OOT: 'outoftime',
+    GAME_STATUS_STALEMATE: 'stalemate',
+    GAME_STATUS_DRAW: 'draw',
+    GAME_STATUS_CHECKMATE: 'mate',
+    GAME_STATUS_RESIGN: 'resign'
 });

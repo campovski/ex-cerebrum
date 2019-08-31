@@ -5,8 +5,8 @@ const c = require('./constants');
 // When lichess module emits EVENT_STREAM_GAME_STATE_DATA, use game state processor and check what happened.
 lichess.emitter.on(c.EVENT_STREAM_GAME_STATE_DATA, processGameState);
 
-// When lichess module emits EVENT_STREAM_GAME_STATE_END, use
-lichess.emitter.on(c.EVENT_STREAM_GAME_STATE_END, processStreamEventEnd);
+// When lichess module emits EVENT_STREAM_GAME_STATE_END, check whether the game is finished.
+lichess.emitter.on(c.EVENT_STREAM_GAME_STATE_END, processGameStreamEventEnd);
 
 // When incoming event is received via lichess.readStreamIncomingEvents(), process it.
 lichess.emitter.on(c.EVENT_STREAM_INCOMING_EVENTS_DATA, processIncomingEvents);
@@ -79,6 +79,11 @@ function processGameStart(data) {
     // TODO somehow initialize the chess computer
 }
 
+function processGameEnd(data) {
+    console.log('Game is finished');
+    // TODO implement destruction of chess bot and then search for new game, probably by emitting event
+}
+
 function processMove(move) {
     if (typeof move !== 'string' && move.length !== 4) {
         throw new Error('[processor.processMove] Bad argument!');
@@ -91,10 +96,18 @@ function processMove(move) {
  * game has ended or something else went wrong. Therefore,
  * we need to query Lichess API to see if the game has ended or not.
  *
+ * @param {string} gameId - ID of the game the stream has ended
  * @returns {void}
  */
-function processStreamEventEnd() {
+async function processGameStreamEventEnd(gameId) {
     console.log('stream ended');
+    const response = await lichess.support.exportOneGameAsJson(gameId, false, false);
+    if (response['status'] === 200) { // the game is finished
+        processGameEnd(response['data']);
+    } else {
+        throw new Error('[processor.processGameStreamEventEnd] Stream quit unexpectedly.');
+        // TODO reconnect to stream instead of throwing error
+    }
 }
 
 module.exports = {

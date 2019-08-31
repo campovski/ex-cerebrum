@@ -106,7 +106,7 @@ function createChallenge(username, rated, clockLimit, clockIncrement, days, colo
  * Accept the challenge with id challengeId.
  *
  * @param {number} challengeId - ID of the challenge to be accepted
- * @returns {Promise<AxiosResponse<Object>>} Promise
+ * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function acceptChallenge(challengeId) {
     console.log(`Accepting challenge ${challengeId} ...`);
@@ -124,7 +124,7 @@ function acceptChallenge(challengeId) {
  * Decline the challenge with id challengeId.
  *
  * @param {number} challengeId - ID of the challenge to be declined
- * @returns {Promise<AxiosResponse<Object>>} Promise
+ * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function declineChallenge(challengeId) {
     console.log(`Declining challenge ${challengeId} ...`);
@@ -166,7 +166,7 @@ function getStreamGameState(gameId) {
             });
             res.on('end', () => {
                 console.log(`Stream of game ${gameId} ended.`);
-                eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_END);
+                eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_END, gameId);
                 resolve(`Game ${gameId} ended.`);
             });
         });
@@ -178,7 +178,7 @@ function getStreamGameState(gameId) {
  *
  * @param {number} gameId - ID of the game in which to make move
  * @param {string} move - 4 letter move in UCI format
- * @returns {Promise<AxiosResponse<Object>>} Promise
+ * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function makeMove(gameId, move) {
     return axios.post(
@@ -197,7 +197,7 @@ function makeMove(gameId, move) {
  * @param {number} gameId - ID of the game
  * @param {string} room - either 'spectator' or 'player'
  * @param {string} text - write this in the chat
- * @returns {Promise<AxiosResponse<Object>>} Promise
+ * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function writeInChat(gameId, room, text) {
     return axios.post(
@@ -214,7 +214,7 @@ function writeInChat(gameId, room, text) {
  * Abort the game.
  *
  * @param {number} gameId - ID of the game to be aborted
- * @returns {Promise<AxiosResponse<Object>>} Promise
+ * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function abortGame(gameId) {
     return axios.post(
@@ -231,7 +231,7 @@ function abortGame(gameId) {
  * Resign the game.
  *
  * @param {number} gameId - ID of the game to be resigned
- * @returns {Promise<AxiosResponse<Object>>} Promise
+ * @returns {Promise<AxiosResponse<object>>} Promise
  */
 function resignGame(gameId) {
     return axios.post(
@@ -240,6 +240,29 @@ function resignGame(gameId) {
         {
             baseURL: 'https://lichess.org',
             headers: { Authorization: `Bearer ${process.env.LICHESS_TOKEN}` }
+        }
+    );
+}
+
+/**
+ * Get game with gameId. This is useful to check if the game is finished
+ * or not - check response object for key 'status'.
+ *
+ * @param {string} gameId - ID of the game
+ * @param {boolean} moves - include PGN moves?
+ * @param {boolean} tags - include PGN tags?
+ * @param {boolean} clocks - include clock comments in PGN?
+ * @param {boolean} evals - include analysis evaluation in PGN?
+ * @param {boolean} opening - include opening information?
+ * @param {boolean} literate - insert textual annotations in PGN?
+ * @returns {Promise<AxiosResponse<object>>} Promise
+ */
+function exportOneGameAsJson(gameId, moves = true, tags = true, clocks = false, evals = false, opening = false, literate = false) {
+    return axios.get(
+        `/game/export/${gameId}?moves=${moves}&tags=${tags}&clocks=${clocks}&evals=${evals}&opening=${opening}&literate=${literate}`,
+        {
+            baseURL: 'https://lichess.org',
+            headers: { Accept: 'application/json' }
         }
     );
 }
@@ -256,6 +279,7 @@ module.exports = {
         makeMove: makeMove,
         writeInChat: writeInChat,
         abortGame: abortGame,
-        resignGame: resignGame
+        resignGame: resignGame,
+        exportOneGameAsJson: exportOneGameAsJson
     }
 };
