@@ -17,8 +17,8 @@ lichess.emitter.on(c.EVENT_STREAM_GAME_STATE_DATA, processGameState);
 // When incoming event is received via lichess.readStreamIncomingEvents(), process it.
 lichess.emitter.on(c.EVENT_STREAM_INCOMING_EVENTS_DATA, processIncomingEvents);
 
+// Open stream for incoming events. Since that stream never resolves, we don't need .then.
 lichess.support.readStreamIncomingEvents()
-    .then()
     .catch(reason => console.log(reason));
 
 /**
@@ -39,10 +39,6 @@ function processGameState(data) {
             console.log(`[${data['room']}] User ${data['username']} said ${data['text']}`);
             // TODO process chat line. This can also be used to notify frontend about draw offer.
             break;
-        default:
-            console.log('default case');
-            console.log(typeof data);
-            console.log(data);
     }
 }
 

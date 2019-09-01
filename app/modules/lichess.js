@@ -161,7 +161,16 @@ function getStreamGameState(gameId) {
             res.on('data', (chunk) => {
                 const data = chunk.toString();
                 if (data.length > 1) {
-                    eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_DATA, JSON.parse(data));
+                    try { // only one event in stream
+                        eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_DATA, JSON.parse(data));
+                    } catch (e) { // multiple events in stream -> emit each one, except the last empty ''
+                        data.split('\n')
+                            .forEach((value, index, array) => {
+                                if (index < array.length - 1) {
+                                    eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_DATA, JSON.parse(value));
+                                }
+                            });
+                    }
                 }
             });
             res.on('end', () => {
