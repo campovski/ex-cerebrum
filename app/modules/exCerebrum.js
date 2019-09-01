@@ -6,12 +6,12 @@ class ExCerebrum {
     }
 
     makeMove(move) {
-        // make move
+        return 'this is my move';
     }
 
     updateAndMakeMove(move) {
         this.game.updateBoard(move);
-        this.makeMove();
+        return this.makeMove();
     }
 }
 

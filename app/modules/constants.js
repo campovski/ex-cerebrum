@@ -1,8 +1,6 @@
 'use strict';
 
 module.exports = Object.freeze({
-    EMPTY: -1,
-
     RANK_1: 0,
     RANK_2: 1,
     RANK_3: 2,
@@ -11,7 +9,6 @@ module.exports = Object.freeze({
     RANK_6: 5,
     RANK_7: 6,
     RANK_8: 7,
-
     FILE_A: 0,
     FILE_B: 1,
     FILE_C: 2,
@@ -20,7 +17,6 @@ module.exports = Object.freeze({
     FILE_F: 5,
     FILE_G: 6,
     FILE_H: 7,
-
     LICHESS_FILE_A: 'a',
     LICHESS_FILE_B: 'b',
     LICHESS_FILE_C: 'c',
@@ -30,19 +26,19 @@ module.exports = Object.freeze({
     LICHESS_FILE_G: 'g',
     LICHESS_FILE_H: 'h',
 
-    W_PAWN: 10,
-    W_KNIGHT: 11,
-    W_BISHOP: 12,
-    W_ROOK: 13,
-    W_QUEEN: 14,
-    W_KING: 15,
-
-    B_PAWN: 20,
-    B_KNIGHT: 21,
-    B_BISHOP: 22,
-    B_ROOK: 23,
-    B_QUEEN: 24,
-    B_KING: 25,
+    EMPTY: '*',
+    W_PAWN: 'P',
+    W_KNIGHT: 'N',
+    W_BISHOP: 'B',
+    W_ROOK: 'R',
+    W_QUEEN: 'Q',
+    W_KING: 'K',
+    B_PAWN: 'p',
+    B_KNIGHT: 'n',
+    B_BISHOP: 'b',
+    B_ROOK: 'r',
+    B_QUEEN: 'q',
+    B_KING: 'k',
 
     EVENT_STREAM_GAME_STATE_DATA: 'esgsd',
     EVENT_STREAM_GAME_STATE_END: 'esgse',
@@ -52,5 +48,6 @@ module.exports = Object.freeze({
     GAME_STATUS_STALEMATE: 'stalemate',
     GAME_STATUS_DRAW: 'draw',
     GAME_STATUS_CHECKMATE: 'mate',
-    GAME_STATUS_RESIGN: 'resign'
+    GAME_STATUS_RESIGN: 'resign',
+    GAME_STATUS_ABORTED: 'aborted'
 });

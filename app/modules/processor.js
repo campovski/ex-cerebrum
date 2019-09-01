@@ -34,11 +34,18 @@ function processGameState(data) {
         case 'gameState':
             const moves = data['moves'].split(' ');
             processMove(moves[moves.length - 1]);
+            console.log(bot.game.toString());
             break;
         case 'chatLine':
             console.log(`[${data['room']}] User ${data['username']} said ${data['text']}`);
             // TODO process chat line. This can also be used to notify frontend about draw offer.
             break;
+        case 'gameFull':
+            if (bot !== null) {
+                return; // fallback scenario in case gameFull is received when bot is already initialized
+            }
+            bot = new ExCerebrum(data);
+            console.log(bot.game.toString());
     }
 }
 
@@ -81,8 +88,15 @@ function isChallengeAcceptable(challenge) {
     return true;
 }
 
+/**
+ * When game starts, we save current game id and start
+ * the game stream listener.
+ *
+ * @param {object} data - containing just the ID of the game and event gameStart
+ * @returns {void}
+ */
 function processGameStart(data) {
-    const gameId = data['game']['id'];
+    gameId = data['game']['id'];
     console.log(`Game ${gameId} started`);
     console.log(data);
     lichess.support.getStreamGameState(gameId)
@@ -90,17 +104,35 @@ function processGameStart(data) {
         .catch(reason => console.log(reason));
 }
 
-function processGameEnd(data) {
-    console.log('Game is finished');
-    // TODO implement destruction of chess bot and then search for new game, probably by emitting event
+/**
+ * Simple cleanup function that reinitializes variables to null after game ended.
+ *
+ * @param {object} fullGameData - all data about the game that finished
+ * @returns {void}
+ */
+function processGameEnd(fullGameData) {
+    console.log(`Game is finished with status ${fullGameData['status']}`);
+    bot = null;
+    gameId = null;
 }
 
+/**
+ * When move is played, notify the bot to update its board and make a move.
+ *
+ * @param {string} move - move that was played by bot's opponent
+ * @returns {void}
+ */
 function processMove(move) {
     if (typeof move !== 'string' && move.length !== 4) {
         throw new Error('[processor.processMove] Bad argument!');
     }
     console.log(move);
-    // process move
+    const respondWithMove = bot.updateAndMakeMove(move);
+    // TODO post to Lichess API
+    // lichess.support.makeMove(gameId, respondWithMove)
+    //     .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
+    //     .catch(reason => console.log(reason));
+    console.log(respondWithMove);
 }
 
 /**

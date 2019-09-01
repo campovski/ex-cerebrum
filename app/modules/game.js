@@ -54,6 +54,28 @@ class Game {
     }
 
     /**
+     * Convert current position to string for printing.
+     *
+     * @param {boolean} whiteDown - watch from white's perspective?
+     * @returns {string} representation of current position
+     */
+    toString(whiteDown = true) {
+        let str = '';
+
+        if (whiteDown) {
+            for (let rank = c.RANK_8; rank >= c.RANK_1; rank--) {
+                str += this.board[rank].join('') + '\n';
+            }
+        } else {
+            for (let rank = c.RANK_1; rank <= c.RANK_8; rank++) {
+                str += this.board[rank].join('') + '\n';
+            }
+        }
+
+        return str;
+    }
+
+    /**
      * Initializes board as 2D array.
      *
      * @param {string} variant - what variant is being played
@@ -81,14 +103,14 @@ class Game {
                 this.board[c.RANK_1][c.FILE_G] = c.W_KNIGHT;
                 this.board[c.RANK_1][c.FILE_H] = c.W_ROOK;
 
-                this.board[c.RANK_7][c.FILE_A] = c.B_ROOK;
-                this.board[c.RANK_7][c.FILE_B] = c.B_KNIGHT;
-                this.board[c.RANK_7][c.FILE_C] = c.B_BISHOP;
-                this.board[c.RANK_7][c.FILE_D] = c.B_QUEEN;
-                this.board[c.RANK_7][c.FILE_E] = c.B_KING;
-                this.board[c.RANK_7][c.FILE_F] = c.B_BISHOP;
-                this.board[c.RANK_7][c.FILE_G] = c.B_KNIGHT;
-                this.board[c.RANK_7][c.FILE_H] = c.B_ROOK;
+                this.board[c.RANK_8][c.FILE_A] = c.B_ROOK;
+                this.board[c.RANK_8][c.FILE_B] = c.B_KNIGHT;
+                this.board[c.RANK_8][c.FILE_C] = c.B_BISHOP;
+                this.board[c.RANK_8][c.FILE_D] = c.B_QUEEN;
+                this.board[c.RANK_8][c.FILE_E] = c.B_KING;
+                this.board[c.RANK_8][c.FILE_F] = c.B_BISHOP;
+                this.board[c.RANK_8][c.FILE_G] = c.B_KNIGHT;
+                this.board[c.RANK_8][c.FILE_H] = c.B_ROOK;
                 break;
             case 'racingKings':
                 this.board = [];
