@@ -166,7 +166,7 @@ function getStreamGameState(gameId) {
             });
             res.on('end', () => {
                 console.log(`Stream of game ${gameId} ended.`);
-                eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_END, gameId);
+                // eventEmitter.emit(c.EVENT_STREAM_GAME_STATE_END, gameId);
                 resolve(`Game ${gameId} ended.`);
             });
         });
@@ -271,7 +271,7 @@ module.exports = {
     emitter: eventEmitter,
     support: {
         getProfileData: getProfileData,
-        streamIncomingEvents: readStreamIncomingEvents,
+        readStreamIncomingEvents: readStreamIncomingEvents,
         createChallenge: createChallenge,
         acceptChallenge: acceptChallenge,
         declineChallenge: declineChallenge,
