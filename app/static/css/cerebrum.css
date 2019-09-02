@@ -1,0 +1,29 @@
+.chessboard {
+    width: 640px;
+    height: 640px;
+    margin: 20px;
+    border: 20px solid #5c3200;
+}
+
+.square {
+    float: left;
+    width: 80px;
+    height: 80px;
+    font-size: 50px;
+    text-align: center;
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.black {
+    background-color: #ab7029;
+}
+
+.white {
+    background-color: #ffce91;
+}
+
+.square > img {
+    width: 80px;
+    height: 80px;
+}
