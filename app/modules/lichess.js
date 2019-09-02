@@ -278,7 +278,7 @@ function exportOneGameAsJson(gameId, moves = true, tags = true, clocks = false, 
 
 module.exports = {
     emitter: eventEmitter,
-    support: {
+    api: {
         getProfileData: getProfileData,
         readStreamIncomingEvents: readStreamIncomingEvents,
         createChallenge: createChallenge,

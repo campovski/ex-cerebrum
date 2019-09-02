@@ -18,7 +18,7 @@ lichess.emitter.on(c.EVENT_STREAM_GAME_STATE_DATA, processGameState);
 lichess.emitter.on(c.EVENT_STREAM_INCOMING_EVENTS_DATA, processIncomingEvents);
 
 // Open stream for incoming events. Since that stream never resolves, we don't need .then.
-lichess.support.readStreamIncomingEvents()
+lichess.api.readStreamIncomingEvents()
     .catch(reason => console.log(reason));
 
 /**
@@ -66,7 +66,7 @@ function processIncomingEvents(data) {
             const challengeId = data['challenge']['id'];
             console.log(`Challenge ${challengeId}`);
             if (isChallengeAcceptable(data)) {
-                lichess.support.acceptChallenge(challengeId)
+                lichess.api.acceptChallenge(challengeId)
                     .then(() => console.log(`[processor.processIncomingEvents] Challenge ${challengeId} accepted!`))
                     .catch(reason => console.log(reason));
             }
@@ -99,7 +99,7 @@ function processGameStart(data) {
     gameId = data['game']['id'];
     console.log(`Game ${gameId} started`);
     console.log(data);
-    lichess.support.getStreamGameState(gameId)
+    lichess.api.getStreamGameState(gameId)
         .then(() => processGameStreamEventEnd(gameId))
         .catch(reason => console.log(reason));
 }
@@ -129,7 +129,7 @@ function processMove(move) {
     console.log(move);
     const respondWithMove = bot.updateAndMakeMove(move);
     // TODO post to Lichess API
-    // lichess.support.makeMove(gameId, respondWithMove)
+    // lichess.api.makeMove(gameId, respondWithMove)
     //     .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
     //     .catch(reason => console.log(reason));
     console.log(respondWithMove);
@@ -145,7 +145,7 @@ function processMove(move) {
  */
 async function processGameStreamEventEnd(gameId) {
     console.log('stream ended');
-    const response = await lichess.support.exportOneGameAsJson(gameId, false, false);
+    const response = await lichess.api.exportOneGameAsJson(gameId, false, false);
     if (response['status'] === 200) { // the game is finished
         processGameEnd(response['data']);
     } else {
