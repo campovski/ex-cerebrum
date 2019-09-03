@@ -40,6 +40,9 @@ module.exports = Object.freeze({
     B_QUEEN: 'q',
     B_KING: 'k',
 
+    EVENT_PROCESSOR_UPDATE_BOARD: 'epub',
+    EVENT_PROCESSOR_GAME_START: 'epgs',
+    EVENT_PROCESSOR_GAME_END: 'epge',
     EVENT_STREAM_GAME_STATE_DATA: 'esgsd',
     EVENT_STREAM_GAME_STATE_END: 'esgse',
     EVENT_STREAM_INCOMING_EVENTS_DATA: 'esied',

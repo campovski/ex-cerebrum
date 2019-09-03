@@ -1,4 +1,5 @@
 const c = require('./constants');
+const EventEmitter = require('events');
 const ExCerebrum = require('./exCerebrum');
 const lichess = require('./lichess');
 
@@ -7,6 +8,14 @@ let gameId = null;
 
 /** {ExCerebrum} bot */
 let bot = null;
+
+/**
+ * Event emitter used for communication between this module and server
+ * because we need to notify the server to update clients' frontend.
+ *
+ * @type {module:events.internal}
+ */
+const eventEmitter = new EventEmitter();
 
 // When lichess module emits EVENT_STREAM_GAME_STATE_DATA, use game state processor and check what happened.
 lichess.emitter.on(c.EVENT_STREAM_GAME_STATE_DATA, processGameState);
@@ -34,7 +43,6 @@ function processGameState(data) {
         case 'gameState':
             const moves = data['moves'].split(' ');
             processMove(moves[moves.length - 1]);
-            console.log(bot.game.toString());
             break;
         case 'chatLine':
             console.log(`[${data['room']}] User ${data['username']} said ${data['text']}`);
@@ -44,15 +52,16 @@ function processGameState(data) {
             if (bot !== null) {
                 return; // fallback scenario in case gameFull is received when bot is already initialized
             }
-            bot = new ExCerebrum(data);
-            console.log(bot.game.toString());
+            console.log(data);
+            processGameStart(data);
     }
 }
 
 /**
  * Process data received in incoming events stream from lichess module.
  * There are two types of data, 'gameStart' and 'challenge'. If type is
- * 'gameStart', then we setup chess bot.
+ * 'gameStart', then we open the game stream for that game, else it is
+ * challenge, we decide whether to accept it or not.
  *
  * @param {object} data - object containing all information about the game
  * @returns {void}
@@ -61,7 +70,9 @@ function processIncomingEvents(data) {
     console.log('Processing incoming events ...');
     try {
         if (data['type'] === 'gameStart') {
-            processGameStart(data);
+            lichess.api.getStreamGameState(data['game']['id'])
+                .then(() => processGameStreamEventEnd(data['game']['id']))
+                .catch(reason => console.log(reason));
         } else {
             const challengeId = data['challenge']['id'];
             console.log(`Challenge ${challengeId}`);
@@ -89,29 +100,31 @@ function isChallengeAcceptable(challenge) {
 }
 
 /**
- * When game starts, we save current game id and start
- * the game stream listener.
+ * When game starts, we save current game id, initialize the bot
+ * and emit the start-of-game event.
  *
  * @param {object} data - containing just the ID of the game and event gameStart
  * @returns {void}
  */
 function processGameStart(data) {
-    gameId = data['game']['id'];
+    gameId = data['id'];
+    bot = new ExCerebrum(data);
+    eventEmitter.emit(c.EVENT_PROCESSOR_GAME_START, bot.game);
     console.log(`Game ${gameId} started`);
     console.log(data);
-    lichess.api.getStreamGameState(gameId)
-        .then(() => processGameStreamEventEnd(gameId))
-        .catch(reason => console.log(reason));
+    console.log(bot.game.toString());
 }
 
 /**
- * Simple cleanup function that reinitializes variables to null after game ended.
+ * Simple cleanup function that reinitializes variables to null after game ended
+ * and emits the end-of-game event.
  *
  * @param {object} fullGameData - all data about the game that finished
  * @returns {void}
  */
 function processGameEnd(fullGameData) {
     console.log(`Game is finished with status ${fullGameData['status']}`);
+    eventEmitter.emit(c.EVENT_PROCESSOR_GAME_END, fullGameData);
     bot = null;
     gameId = null;
 }
@@ -123,10 +136,16 @@ function processGameEnd(fullGameData) {
  * @returns {void}
  */
 function processMove(move) {
+    console.log(move);
     if (typeof move !== 'string' && move.length !== 4) {
         throw new Error('[processor.processMove] Bad argument!');
     }
-    console.log(move);
+
+    eventEmitter.emit(c.EVENT_PROCESSOR_UPDATE_BOARD, {
+        from: move.substr(0, 2),
+        to: move.substr(2, 2)
+    });
+
     const respondWithMove = bot.updateAndMakeMove(move);
     // TODO post to Lichess API
     // lichess.api.makeMove(gameId, respondWithMove)
@@ -153,3 +172,6 @@ async function processGameStreamEventEnd(gameId) {
         // TODO reconnect to stream instead of throwing error
     }
 }
+
+// We only expose eventEmitter and only to server!
+module.exports = eventEmitter;

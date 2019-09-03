@@ -1,9 +1,30 @@
+if (!process.env.LICHESS_TOKEN) {
+    console.log('No environment variable LICHESS_TOKEN ...');
+    process.exit();
+}
+
 const express = require('express');
+const app = express();
+const server = require('http').createServer(app);
+const socketio = require('socket.io')(server);
+
+const c = require('./modules/constants');
 const nunjucks = require('nunjucks');
 const path = require('path');
-require('./modules/processor');
+const processorEvents = require('./modules/processor');
 const port = process.env.PORT || 3000;
-const app = express();
+
+processorEvents.on(c.EVENT_PROCESSOR_GAME_START, (data) => {
+    console.log('GAME START FROM SERVER.JS');
+});
+
+processorEvents.on(c.EVENT_PROCESSOR_UPDATE_BOARD, (move) => {
+    console.log(`MOVE FROM SERVER.JS ${move.from} - ${move.to}`);
+});
+
+processorEvents.on(c.EVENT_PROCESSOR_GAME_END, (data) => {
+    console.log('GAME ENDED FROM SERVER.JS');
+});
 
 // Configure nunjucks to use express app
 nunjucks.configure('views', {

@@ -134,6 +134,7 @@ class Game {
 
         this.board[rankTo][fileTo] = this.board[rankFrom][fileFrom];
         this.board[rankFrom][fileFrom] = c.EMPTY;
+        console.log(this.toString());
     }
 }
 
