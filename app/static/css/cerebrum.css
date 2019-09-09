@@ -7,8 +7,8 @@
 
 .square {
     float: left;
-    width: 80px;
-    height: 80px;
+    width: 78px;
+    height: 78px;
     font-size: 50px;
     text-align: center;
     display: table-cell;
@@ -17,13 +17,19 @@
 
 .black {
     background-color: #ab7029;
+    border: 1px solid #ab7029;
 }
 
 .white {
     background-color: #ffce91;
+    border: 1px solid #ffce91;
 }
 
 .square > img {
-    width: 80px;
-    height: 80px;
+    width: 78px;
+    height: 78px;
+}
+
+.highlight {
+    background-color: gold;
 }

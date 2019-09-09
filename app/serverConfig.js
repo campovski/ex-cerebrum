@@ -12,6 +12,8 @@ nunjucks.configure('views', {
 app.set('view engine', 'html');
 
 app.use('/app/static', express.static(path.join(__dirname, 'static')));
+app.use('/app/dist', express.static(path.join(__dirname, 'dist')));
+app.use('/', express.static(path.join(__dirname, 'static/images/chessmen')));
 
 // Routes
 app.get('/', (req, res) => res.render('index.html'));

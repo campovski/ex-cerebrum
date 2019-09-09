@@ -20,7 +20,7 @@ processorEvents.on(c.EVENT_PROCESSOR_GAME_START, (data) => {
 
 processorEvents.on(c.EVENT_PROCESSOR_UPDATE_BOARD, (move) => {
     console.log(`MOVE FROM SERVER.JS ${move.from} - ${move.to}`);
-    socketio.emit(c.EVENT_PROCESSOR_UPDATE_BOARD, move);
+    socketio.emit(c.EVENT_SOCKET_UPDATE_BOARD, move);
 });
 
 processorEvents.on(c.EVENT_PROCESSOR_GAME_END, (data) => {
@@ -28,6 +28,8 @@ processorEvents.on(c.EVENT_PROCESSOR_GAME_END, (data) => {
     socketio.emit(c.EVENT_SOCKET_GAME_END, data);
 });
 
+socketio.on('connection', () => { console.log('CONECTION'); });
+
 // Start the server.
 const port = process.env.PORT || 3000;
-app.listen(port, () => { console.log(`Ex Cerebrum server listening on port ${port}!`); });
+server.listen(port, () => { console.log(`Ex Cerebrum server listening on port ${port}!`); });

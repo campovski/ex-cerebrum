@@ -25,6 +25,7 @@ module.exports = Object.freeze({
     LICHESS_FILE_F: 'f',
     LICHESS_FILE_G: 'g',
     LICHESS_FILE_H: 'h',
+    FRONTEND_FILES: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
 
     EMPTY: '*',
     W_PAWN: 'P',
@@ -55,5 +56,18 @@ module.exports = Object.freeze({
     GAME_STATUS_DRAW: 'draw',
     GAME_STATUS_CHECKMATE: 'mate',
     GAME_STATUS_RESIGN: 'resign',
-    GAME_STATUS_ABORTED: 'aborted'
+    GAME_STATUS_ABORTED: 'aborted',
+
+    IMG_W_PAWN: 'white_pawn.svg',
+    IMG_W_KNIGHT: 'white_knight.svg',
+    IMG_W_BISHOP: 'white_bishop.svg',
+    IMG_W_ROOK: 'white_rook.svg',
+    IMG_W_QUEEN: 'white_queen.svg',
+    IMG_W_KING: 'white_king.svg',
+    IMG_B_PAWN: 'black_pawn.svg',
+    IMG_B_KNIGHT: 'black_knight.svg',
+    IMG_B_BISHOP: 'black_bishop.svg',
+    IMG_B_ROOK: 'black_rook.svg',
+    IMG_B_QUEEN: 'black_queen.svg',
+    IMG_B_KING: 'black_king.svg'
 });

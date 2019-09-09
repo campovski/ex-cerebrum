@@ -142,8 +142,10 @@ function processMove(move) {
     }
 
     eventEmitter.emit(c.EVENT_PROCESSOR_UPDATE_BOARD, {
-        from: move.substr(0, 2),
-        to: move.substr(2, 2)
+        move: {
+            from: move.substr(0, 2),
+            to: move.substr(2, 2)
+        }
     });
 
     const respondWithMove = bot.updateAndMakeMove(move);
