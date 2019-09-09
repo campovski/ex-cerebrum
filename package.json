@@ -4,6 +4,8 @@
   "description": "Chess bot that plays on Lichess.org",
   "main": "main.js",
   "scripts": {
+    "build": "cd app && webpack && node main.js",
+    "server": "node app/main.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
