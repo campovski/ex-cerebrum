@@ -98,6 +98,9 @@ function initializeBoard(board) {
             }
         }
     }
+
+    document.getElementById('noGameNotification').classList.add('invisible');
+    document.getElementById('chessboard').classList.remove('invisible');
 }
 
 /**
