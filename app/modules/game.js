@@ -72,7 +72,6 @@ class Game {
         };
 
         this.initBoard();
-        this.getAvailableMoves();
 
         // Save misc data about game.
         this.id = gameData['id'];
@@ -183,7 +182,7 @@ class Game {
      * @returns {void}
      */
     getAvailableMoves() {
-        this.availableMoves = new Set();
+        this.availableMoves = [];
 
         if (this.whiteOnMove) {
             this.getAvailableMovesForWhite();
@@ -959,6 +958,8 @@ class Game {
         }
         this.board[move[3]][move[2]] = this.board[move[1]][move[0]];
         this.board[move[1]][move[0]] = c.EMPTY;
+        console.log('mock');
+        console.log(this.toString());
 
         // Check if king of the player on turn would be under attack after move.
         if (this.whiteOnMove) {
@@ -972,7 +973,8 @@ class Game {
         }
 
         // Redo the mock move.
-        this.board[move[1][0]] = this.board[move[3]][move[2]];
+        console.log(this.board[move[3]][move[2]]);
+        this.board[move[1]][move[0]] = this.board[move[3]][move[2]];
         this.board[move[3]][move[2]] = c.EMPTY;
         if (this.board[move[1]][move[0]] === c.W_KING) {
             this.kingsPosition.white.file = move[0];
@@ -981,6 +983,8 @@ class Game {
             this.kingsPosition.black.file = move[0];
             this.kingsPosition.black.rank = move[1];
         }
+        console.log('reverse mock');
+        console.log(this.toString());
 
         return isLegal;
     }

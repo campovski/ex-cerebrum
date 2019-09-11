@@ -12,10 +12,6 @@ class ExCerebrum {
      */
     constructor(gameData) {
         this.game = new Game(gameData);
-
-        if (gameData['white']['id'] === 'excerebrum') {
-            this.makeMove();
-        }
     }
 
     /**
@@ -25,6 +21,7 @@ class ExCerebrum {
      * @returns {string} - move in UCI format
      */
     makeMove() {
+        this.game.getAvailableMoves();
         return support.moveToUci(this.game.legalMoves[Math.floor(Math.random() * this.game.legalMoves.length)]);
     }
 
@@ -35,8 +32,10 @@ class ExCerebrum {
      * @returns {string} - my move in UCI format
      */
     updateAndMakeMove(move) {
-        // Update board with opponent's move.
-        this.game.updateBoard(move);
+        // Update board with opponent's move unless start of the game.
+        if (move !== '') {
+            this.game.updateBoard(move);
+        }
 
         // Find our move and update board with it.
         const myMove = this.makeMove();

@@ -109,10 +109,17 @@ function isChallengeAcceptable(challenge) {
 function processGameStart(data) {
     gameId = data['id'];
     bot = new ExCerebrum(data);
+
+    if (data['white']['id'] === 'excerebrum') {
+        const respondWithMove = bot.updateAndMakeMove('');
+
+        console.log('sending move to lichess');
+        lichess.api.makeMove(gameId, respondWithMove)
+            .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
+            .catch(reason => console.log(reason));
+    }
     eventEmitter.emit(c.EVENT_PROCESSOR_GAME_START, bot.game);
     console.log(`Game ${gameId} started`);
-    console.log(data);
-    console.log(bot.game.toString());
 }
 
 /**
@@ -143,7 +150,9 @@ function processMove(move) {
     }
 
     // If this is the move bot has made, ignore it.
-    if (move === support.moveToUci(this.game.moveHistory[this.game.moveHistory.length - 1])) {
+    console.log(bot.game.moveHistory);
+    if (bot.game.moveHistory.length > 1 &&
+        move === support.moveToUci(bot.game.moveHistory[bot.game.moveHistory.length - 1])) {
         return;
     }
 
@@ -159,6 +168,7 @@ function processMove(move) {
     const respondWithMove = bot.updateAndMakeMove(move);
 
     // Send move to lichess.
+    console.log('sending move to lichess');
     lichess.api.makeMove(gameId, respondWithMove)
         .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
         .catch(reason => console.log(reason));
