@@ -2,6 +2,7 @@ const c = require('./constants');
 const EventEmitter = require('events');
 const ExCerebrum = require('./exCerebrum');
 const lichess = require('./lichess');
+const support = require('./support');
 
 /** {string} ID of the game currently playing */
 let gameId = null;
@@ -130,6 +131,7 @@ function processGameEnd(fullGameData) {
 
 /**
  * When move is played, notify the bot to update its board and make a move.
+ * Also send the bot's move back to Lichess and signal that frontend update is needed.
  *
  * @param {string} move - move that was played by bot's opponent
  * @returns {void}
@@ -140,6 +142,12 @@ function processMove(move) {
         throw new Error('[processor.processMove] Bad argument!');
     }
 
+    // If this is the move bot has made, ignore it.
+    if (move === support.moveToUci(this.game.moveHistory[this.game.moveHistory.length - 1])) {
+        return;
+    }
+
+    // Emit event to update frontend with opponent's move.
     eventEmitter.emit(c.EVENT_PROCESSOR_UPDATE_BOARD, {
         move: {
             from: move.substr(0, 2),
@@ -147,11 +155,22 @@ function processMove(move) {
         }
     });
 
+    // Get move from bot.
     const respondWithMove = bot.updateAndMakeMove(move);
-    // TODO post to Lichess API
-    // lichess.api.makeMove(gameId, respondWithMove)
-    //     .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
-    //     .catch(reason => console.log(reason));
+
+    // Send move to lichess.
+    lichess.api.makeMove(gameId, respondWithMove)
+        .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
+        .catch(reason => console.log(reason));
+
+    // Emit event to update frontend with bot's move.
+    eventEmitter.emit(c.EVENT_PROCESSOR_UPDATE_BOARD, {
+        move: {
+            from: respondWithMove.substr(0, 2),
+            to: respondWithMove.substr(2, 2)
+        }
+    });
+
     console.log(respondWithMove);
 }
 
