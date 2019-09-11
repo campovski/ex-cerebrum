@@ -55,6 +55,9 @@ class Game {
         /** {Array<Array<number>>} available moves */
         this.availableMoves = [];
 
+        /** {Array<Array<number>>} legal moves, a "subset" of this.availableMoves */
+        this.legalMoves = [];
+
         /** {object} remember kings position */
         this.kingsPosition = {
             white: {
@@ -191,12 +194,15 @@ class Game {
      * @returns {void}
      */
     getAvailableMoves() {
-        this.availableMoves = [];
+        this.availableMoves = new Set();
+
         if (this.whiteOnMove) {
             this.getAvailableMovesForWhite();
         } else {
             this.getAvailableMovesForBlack();
         }
+
+        this.filterLegalMoves();
     }
 
     /**
@@ -929,6 +935,251 @@ class Game {
      */
     willBlackKingNotAttackWhite(newFile, newRank) {
         return !(Math.abs(this.kingsPosition.white.file - newFile) < 2 && Math.abs(this.kingsPosition.white.rank - newRank) < 2);
+    }
+
+    /**
+     * Remove all illegal moves from this.availableMoves.
+     *
+     * @returns {void}
+     */
+    filterLegalMoves() {
+        this.availableMoves.forEach((move) => {
+            if (this.isMoveLegal(move)) {
+                this.legalMoves.push(move);
+            }
+        });
+    }
+
+    /**
+     * Check if move will leave king in check or expose it to check.
+     *
+     * @param {Array<number>} move - 4D vector
+     * @returns {boolean} is move legal?
+     */
+    isMoveLegal(move) {
+        // Initialize return value to false, better safe then sorry.
+        let isLegal = false;
+
+        // Mock make move.
+        if (this.board[move[1]][move[0]] === c.W_KING) {
+            this.kingsPosition.white.file = move[2];
+            this.kingsPosition.white.rank = move[3];
+        } else if (this.board[move[1]][move[0]] === c.B_KING) {
+            this.kingsPosition.black.file = move[2];
+            this.kingsPosition.black.rank = move[3];
+        }
+        this.board[move[3]][move[2]] = this.board[move[1]][move[0]];
+        this.board[move[1]][move[0]] = c.EMPTY;
+
+        // Check if king of the player on turn would be under attack after move.
+        if (this.whiteOnMove) {
+            if (!this.isWhiteKingAttacked()) {
+                isLegal = true;
+            }
+        } else {
+            if (!this.isBlackKingAttacked()) {
+                isLegal = true;
+            }
+        }
+
+        // Redo the mock move.
+        this.board[move[1][0]] = this.board[move[3]][move[2]];
+        this.board[move[3]][move[2]] = c.EMPTY;
+        if (this.board[move[1]][move[0]] === c.W_KING) {
+            this.kingsPosition.white.file = move[0];
+            this.kingsPosition.white.rank = move[1];
+        } else if (this.board[move[1]][move[0]] === c.B_KING) {
+            this.kingsPosition.black.file = move[0];
+            this.kingsPosition.black.rank = move[1];
+        }
+
+        return isLegal;
+    }
+
+    /**
+     * Check if white king is attacked in current position.
+     *
+     * @returns {boolean} is white king under attack
+     */
+    isWhiteKingAttacked() {
+        const file = this.kingsPosition.white.file;
+        const rank = this.kingsPosition.white.rank;
+
+        // Attacked by pawn?
+        if (rank <= c.RANK_6 && ((file >= c.FILE_B && this.board[file - 1][rank + 1] === c.B_PAWN) || (file <= c.FILE_G && this.board[file + 1][rank + 1] === c.B_PAWN))) {
+            return true;
+        }
+
+        // Attacked by knight?
+        if ((rank <= c.RANK_6 && ((file >= c.FILE_B && this.board[rank + 2][file - 1] === c.B_KNIGHT) || (file <= c.FILE_G && this.board[rank + 2][file + 1] === c.B_KNIGHT))) ||
+            (rank >= c.RANK_3 && ((file >= c.FILE_B && this.board[rank - 2][file - 1] === c.B_KNIGHT) || (file <= c.FILE_G && this.board[rank - 2][file + 1] === c.B_KNIGHT))) ||
+            (file >= c.FILE_C && ((rank >= c.RANK_2 && this.board[rank - 1][file - 2] === c.B_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file - 2] === c.B_KNIGHT))) ||
+            (file <= c.FILE_F && ((rank <= c.RANK_7 && this.board[rank + 1][file - 2] === c.B_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file + 2] === c.B_KNIGHT)))) {
+            return true;
+        }
+
+        // Attacked by bishop or queen diagonally?
+        for (let dist = 1; file - dist >= c.FILE_A && rank + dist <= c.RANK_8; dist++) { // from north-west
+            if (isPieceWhite(this.board[rank + dist][file - dist])) {
+                break;
+            }
+            if (this.board[rank + dist][file - dist] === c.B_BISHOP || this.board[rank + dist][file - dist] === c.B_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file - dist >= c.FILE_A && rank - dist >= c.RANK_1; dist++) { // from south-west
+            if (isPieceWhite(this.board[rank - dist][file - dist])) {
+                break;
+            }
+            if (this.board[rank - dist][file - dist] === c.B_BISHOP || this.board[rank - dist][file - dist] === c.B_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file + dist <= c.FILE_H && rank - dist >= c.RANK_1; dist++) { // from south-east
+            if (isPieceWhite(this.board[rank - dist][file + dist])) {
+                break;
+            }
+            if (this.board[rank - dist][file + dist] === c.B_BISHOP || this.board[rank - dist][file + dist] === c.B_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file + dist <= c.FILE_H && rank + dist <= c.RANK_8; dist++) { // from north-east
+            if (isPieceWhite(this.board[rank + dist][file + dist])) {
+                break;
+            }
+            if (this.board[rank + dist][file + dist] === c.B_BISHOP || this.board[rank + dist][file + dist] === c.B_QUEEN) {
+                return true;
+            }
+        }
+
+        // Attacked by rook or queen directly.
+        for (let dist = 1; rank + dist <= c.RANK_8; dist++) { // from north
+            if (isPieceWhite(this.board[rank + dist][file])) {
+                break;
+            }
+            if (this.board[rank + dist][file] === c.B_ROOK || this.board[rank + dist][file] === c.B_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file - dist >= c.FILE_A; dist++) { // from west
+            if (isPieceWhite(this.board[rank][file - dist])) {
+                break;
+            }
+            if (this.board[rank][file - dist] === c.B_ROOK || this.board[rank][file - dist] === c.B_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; rank - dist >= c.RANK_1; dist++) { // from south
+            if (isPieceWhite(this.board[rank - dist][file])) {
+                break;
+            }
+            if (this.board[rank - dist][file] === c.B_ROOK || this.board[rank - dist][file] === c.B_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file + dist <= c.FILE_H; dist++) { // from east
+            if (isPieceWhite(this.board[rank][file + dist])) {
+                break;
+            }
+            if (this.board[rank][file + dist] === c.B_ROOK || this.board[rank][file + dist] === c.B_QUEEN) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if black king is attacked in current position.
+     *
+     * @returns {boolean} is black king under attack
+     */
+    isBlackKingAttacked() {
+        const file = this.kingsPosition.black.file;
+        const rank = this.kingsPosition.black.rank;
+
+        // Attacked by pawn?
+        if (rank >= c.RANK_3 && ((file >= c.FILE_B && this.board[file - 1][rank - 1] === c.W_PAWN) || (file <= c.FILE_G && this.board[file + 1][rank - 1] === c.W_PAWN))) {
+            return true;
+        }
+
+        // Attacked by knight?
+        if ((rank <= c.RANK_6 && ((file >= c.FILE_B && this.board[rank + 2][file - 1] === c.W_KNIGHT) || (file <= c.FILE_G && this.board[rank + 2][file + 1] === c.W_KNIGHT))) ||
+            (rank >= c.RANK_3 && ((file >= c.FILE_B && this.board[rank - 2][file - 1] === c.W_KNIGHT) || (file <= c.FILE_G && this.board[rank - 2][file + 1] === c.W_KNIGHT))) ||
+            (file >= c.FILE_C && ((rank >= c.RANK_2 && this.board[rank - 1][file - 2] === c.W_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file - 2] === c.W_KNIGHT))) ||
+            (file <= c.FILE_F && ((rank <= c.RANK_7 && this.board[rank + 1][file - 2] === c.W_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file + 2] === c.W_KNIGHT)))) {
+            return true;
+        }
+
+        // Attacked by bishop or queen diagonally?
+        for (let dist = 1; file - dist >= c.FILE_A && rank + dist <= c.RANK_8; dist++) { // from north-west
+            if (isPieceBlack(this.board[rank + dist][file - dist])) {
+                break;
+            }
+            if (this.board[rank + dist][file - dist] === c.W_BISHOP || this.board[rank + dist][file - dist] === c.W_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file - dist >= c.FILE_A && rank - dist >= c.RANK_1; dist++) { // from south-west
+            if (isPieceBlack(this.board[rank - dist][file - dist])) {
+                break;
+            }
+            if (this.board[rank - dist][file - dist] === c.W_BISHOP || this.board[rank - dist][file - dist] === c.W_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file + dist <= c.FILE_H && rank - dist >= c.RANK_1; dist++) { // from south-east
+            if (isPieceBlack(this.board[rank - dist][file + dist])) {
+                break;
+            }
+            if (this.board[rank - dist][file + dist] === c.W_BISHOP || this.board[rank - dist][file + dist] === c.W_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file + dist <= c.FILE_H && rank + dist <= c.RANK_8; dist++) { // from north-east
+            if (isPieceBlack(this.board[rank + dist][file + dist])) {
+                break;
+            }
+            if (this.board[rank + dist][file + dist] === c.W_BISHOP || this.board[rank + dist][file + dist] === c.W_QUEEN) {
+                return true;
+            }
+        }
+
+        // Attacked by rook or queen directly.
+        for (let dist = 1; rank + dist <= c.RANK_8; dist++) { // from north
+            if (isPieceBlack(this.board[rank + dist][file])) {
+                break;
+            }
+            if (this.board[rank + dist][file] === c.W_ROOK || this.board[rank + dist][file] === c.W_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file - dist >= c.FILE_A; dist++) { // from west
+            if (isPieceBlack(this.board[rank][file - dist])) {
+                break;
+            }
+            if (this.board[rank][file - dist] === c.W_ROOK || this.board[rank][file - dist] === c.W_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; rank - dist >= c.RANK_1; dist++) { // from south
+            if (isPieceBlack(this.board[rank - dist][file])) {
+                break;
+            }
+            if (this.board[rank - dist][file] === c.W_ROOK || this.board[rank - dist][file] === c.W_QUEEN) {
+                return true;
+            }
+        }
+        for (let dist = 1; file + dist <= c.FILE_H; dist++) { // from east
+            if (isPieceBlack(this.board[rank][file + dist])) {
+                break;
+            }
+            if (this.board[rank][file + dist] === c.W_ROOK || this.board[rank][file + dist] === c.W_QUEEN) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 
