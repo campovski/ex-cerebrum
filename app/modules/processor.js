@@ -76,7 +76,7 @@ function processIncomingEvents(data) {
         } else {
             const challengeId = data['challenge']['id'];
             console.log(`Challenge ${challengeId}`);
-            if (isChallengeAcceptable(data)) {
+            if (isChallengeAcceptable(data['challenge'])) {
                 lichess.api.acceptChallenge(challengeId)
                     .then(() => console.log(`[processor.processIncomingEvents] Challenge ${challengeId} accepted!`))
                     .catch(reason => console.log(reason));
@@ -95,8 +95,7 @@ function processIncomingEvents(data) {
  * @returns {boolean} info if challenge is acceptable or not
  */
 function isChallengeAcceptable(challenge) {
-    // TODO some logic instead of pure true
-    return true;
+    return challenge['variant']['key'] === 'standard';
 }
 
 /**

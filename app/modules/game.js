@@ -70,7 +70,7 @@ class Game {
             }
         };
 
-        this.initBoard(gameData['variant']['key']);
+        this.initBoard();
         this.getAvailableMoves();
 
         // Save misc data about game.
@@ -112,42 +112,31 @@ class Game {
      * @returns {void}
      * @throws Error when unknown variant is specified
      */
-    initBoard(variant) {
-        switch (variant) {
-            case 'standard':
-            case 'kingOfTheHill':
-            case 'antichess':
-                this.board = Array.from(Array(8), _ => Array(8).fill(c.EMPTY));
+    initBoard() {
+        this.board = Array.from(Array(8), _ => Array(8).fill(c.EMPTY));
 
-                for (let file = c.FILE_A; file <= c.FILE_H; file++) {
-                    this.board[c.RANK_2][file] = c.W_PAWN;
-                    this.board[c.RANK_7][file] = c.B_PAWN;
-                }
-
-                this.board[c.RANK_1][c.FILE_A] = c.W_ROOK;
-                this.board[c.RANK_1][c.FILE_B] = c.W_KNIGHT;
-                this.board[c.RANK_1][c.FILE_C] = c.W_BISHOP;
-                this.board[c.RANK_1][c.FILE_D] = c.W_QUEEN;
-                this.board[c.RANK_1][c.FILE_E] = c.W_KING;
-                this.board[c.RANK_1][c.FILE_F] = c.W_BISHOP;
-                this.board[c.RANK_1][c.FILE_G] = c.W_KNIGHT;
-                this.board[c.RANK_1][c.FILE_H] = c.W_ROOK;
-
-                this.board[c.RANK_8][c.FILE_A] = c.B_ROOK;
-                this.board[c.RANK_8][c.FILE_B] = c.B_KNIGHT;
-                this.board[c.RANK_8][c.FILE_C] = c.B_BISHOP;
-                this.board[c.RANK_8][c.FILE_D] = c.B_QUEEN;
-                this.board[c.RANK_8][c.FILE_E] = c.B_KING;
-                this.board[c.RANK_8][c.FILE_F] = c.B_BISHOP;
-                this.board[c.RANK_8][c.FILE_G] = c.B_KNIGHT;
-                this.board[c.RANK_8][c.FILE_H] = c.B_ROOK;
-                break;
-            case 'racingKings':
-                this.board = [];
-                break;
-            default:
-                throw new Error('Unknown variant!');
+        for (let file = c.FILE_A; file <= c.FILE_H; file++) {
+            this.board[c.RANK_2][file] = c.W_PAWN;
+            this.board[c.RANK_7][file] = c.B_PAWN;
         }
+
+        this.board[c.RANK_1][c.FILE_A] = c.W_ROOK;
+        this.board[c.RANK_1][c.FILE_B] = c.W_KNIGHT;
+        this.board[c.RANK_1][c.FILE_C] = c.W_BISHOP;
+        this.board[c.RANK_1][c.FILE_D] = c.W_QUEEN;
+        this.board[c.RANK_1][c.FILE_E] = c.W_KING;
+        this.board[c.RANK_1][c.FILE_F] = c.W_BISHOP;
+        this.board[c.RANK_1][c.FILE_G] = c.W_KNIGHT;
+        this.board[c.RANK_1][c.FILE_H] = c.W_ROOK;
+
+        this.board[c.RANK_8][c.FILE_A] = c.B_ROOK;
+        this.board[c.RANK_8][c.FILE_B] = c.B_KNIGHT;
+        this.board[c.RANK_8][c.FILE_C] = c.B_BISHOP;
+        this.board[c.RANK_8][c.FILE_D] = c.B_QUEEN;
+        this.board[c.RANK_8][c.FILE_E] = c.B_KING;
+        this.board[c.RANK_8][c.FILE_F] = c.B_BISHOP;
+        this.board[c.RANK_8][c.FILE_G] = c.B_KNIGHT;
+        this.board[c.RANK_8][c.FILE_H] = c.B_ROOK;
     }
 
     /**
