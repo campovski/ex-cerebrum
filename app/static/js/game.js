@@ -18,7 +18,6 @@ socket.on(c.EVENT_SOCKET_UPDATE_BOARD, handleUpdate);
  * @returns {void}
  */
 function handleGameStart(data) {
-    console.log('begin', data);
     initializeBoard(data.board);
 }
 
@@ -41,7 +40,6 @@ function handleGameEnd(data) {
  * @returns {void}
  */
 function handleUpdate(data) {
-    console.log('update', data);
     updateBoard(data.move);
 }
 

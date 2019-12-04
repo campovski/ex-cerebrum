@@ -2,6 +2,9 @@
  * This module handles frontend-backend communication.
  */
 
+const dotenv = require('dotenv');
+dotenv.config();
+
 if (!process.env.LICHESS_TOKEN) {
     console.log('No environment variable LICHESS_TOKEN ...');
     process.exit();
@@ -18,9 +21,10 @@ processorEvents.on(c.EVENT_PROCESSOR_GAME_START, (data) => {
     socketio.emit(c.EVENT_SOCKET_GAME_START, data);
 });
 
-processorEvents.on(c.EVENT_PROCESSOR_UPDATE_BOARD, (move) => {
-    console.log(`MOVE FROM SERVER.JS ${move.from} - ${move.to}`);
-    socketio.emit(c.EVENT_SOCKET_UPDATE_BOARD, move);
+processorEvents.on(c.EVENT_PROCESSOR_UPDATE_BOARD, (data) => {
+    console.log(data.move);
+    console.log(`MOVE FROM SERVER.JS ${data.move.from} - ${data.move.to}`);
+    socketio.emit(c.EVENT_SOCKET_UPDATE_BOARD, data);
 });
 
 processorEvents.on(c.EVENT_PROCESSOR_GAME_END, (data) => {
@@ -28,7 +32,7 @@ processorEvents.on(c.EVENT_PROCESSOR_GAME_END, (data) => {
     socketio.emit(c.EVENT_SOCKET_GAME_END, data);
 });
 
-socketio.on('connection', () => { console.log('CONECTION'); });
+socketio.on('connection', () => { console.log('CONNECTION'); });
 
 // Start the server.
 const port = process.env.PORT || 3000;

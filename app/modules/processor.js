@@ -52,7 +52,6 @@ function processGameState(data) {
             if (bot !== null) {
                 return; // fallback scenario in case gameFull is received when bot is already initialized
             }
-            console.log(data);
             processGameStart(data);
     }
 }
@@ -110,7 +109,6 @@ function processGameStart(data) {
     bot = new ExCerebrum(data);
     eventEmitter.emit(c.EVENT_PROCESSOR_GAME_START, bot.game);
     console.log(`Game ${gameId} started`);
-    console.log(data);
     console.log(bot.game.toString());
 }
 

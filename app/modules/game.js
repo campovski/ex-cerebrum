@@ -70,9 +70,6 @@ class Game {
             }
         };
 
-        this.initBoard();
-        this.getAvailableMoves();
-
         // Save misc data about game.
         this.id = gameData['id'];
         this.timeWhite = gameData['clock']['initial'];
@@ -81,6 +78,11 @@ class Game {
         this.isRated = gameData['rated'];
         this.playerWhite = gameData['white'];
         this.playerBlack = gameData['black'];
+
+        this.initBoard();
+        if (this.playerWhite.id === 'excerebrum') {
+            this.getAvailableMoves();
+        }
     }
 
     /**
@@ -91,7 +93,6 @@ class Game {
      */
     toString(whiteDown = true) {
         let str = '';
-
         if (whiteDown) {
             for (let rank = c.RANK_8; rank >= c.RANK_1; rank--) {
                 str += this.board[rank].join('') + '\n';
@@ -108,7 +109,6 @@ class Game {
     /**
      * Initializes board as 2D array.
      *
-     * @param {string} variant - what variant is being played
      * @returns {void}
      * @throws Error when unknown variant is specified
      */
@@ -183,7 +183,7 @@ class Game {
      * @returns {void}
      */
     getAvailableMoves() {
-        this.availableMoves = new Set();
+        this.availableMoves = [];
 
         if (this.whiteOnMove) {
             this.getAvailableMovesForWhite();
@@ -932,6 +932,7 @@ class Game {
      * @returns {void}
      */
     filterLegalMoves() {
+        console.log('number of moves ', this.availableMoves.length);
         this.availableMoves.forEach((move) => {
             if (this.isMoveLegal(move)) {
                 this.legalMoves.push(move);
