@@ -110,6 +110,14 @@ function processGameStart(data) {
     eventEmitter.emit(c.EVENT_PROCESSOR_GAME_START, bot.game);
     console.log(`Game ${gameId} started`);
     console.log(bot.game.toString());
+    if (bot.game.myTurn) {
+        const respondWithMove = bot.makeMove();
+        if (respondWithMove !== null) {
+            lichess.api.makeMove(gameId, respondWithMove)
+                .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
+                .catch(reason => console.log(reason));
+        }
+    }
 }
 
 /**
@@ -146,11 +154,11 @@ function processMove(move) {
     });
 
     const respondWithMove = bot.updateAndMakeMove(move);
-    // TODO post to Lichess API
-    // lichess.api.makeMove(gameId, respondWithMove)
-    //     .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
-    //     .catch(reason => console.log(reason));
-    console.log(respondWithMove);
+    if (respondWithMove !== null) {
+        lichess.api.makeMove(gameId, respondWithMove)
+            .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
+            .catch(reason => console.log(reason));
+    }
 }
 
 /**

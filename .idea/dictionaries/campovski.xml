@@ -2,6 +2,7 @@
   <dictionary name="campovski">
     <words>
       <w>dotenv</w>
+      <w>lichess</w>
       <w>socketio</w>
     </words>
   </dictionary>

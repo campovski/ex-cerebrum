@@ -79,10 +79,10 @@ class Game {
         this.playerWhite = gameData['white'];
         this.playerBlack = gameData['black'];
 
+        this.myTurn = this.playerWhite.id === 'excerebrum';
+
         this.initBoard();
-        if (this.playerWhite.id === 'excerebrum') {
-            this.getAvailableMoves();
-        }
+        this.getAvailableMoves();
     }
 
     /**
@@ -173,6 +173,7 @@ class Game {
         // Make move.
         this.board[rankTo][fileTo] = this.board[rankFrom][fileFrom];
         this.board[rankFrom][fileFrom] = c.EMPTY;
+        this.myTurn = !this.myTurn;
         this.whiteOnMove = !this.whiteOnMove;
         console.log(this.toString());
     }
@@ -973,7 +974,7 @@ class Game {
         }
 
         // Redo the mock move.
-        this.board[move[1][0]] = this.board[move[3]][move[2]];
+        this.board[move[1]][move[0]] = this.board[move[3]][move[2]];
         this.board[move[3]][move[2]] = c.EMPTY;
         if (this.board[move[1]][move[0]] === c.W_KING) {
             this.kingsPosition.white.file = move[0];
@@ -1171,6 +1172,16 @@ class Game {
 
         return false;
     }
+
+    /**
+     * Convert move from 4D array of board indices to UCI format.
+     *
+     * @param {Array<int>} move - 4D vector representing move
+     * @returns {string} UCI representation of move
+     */
+    serializeMove(move) {
+        return parseLetterFile(move[0]) + parseLetterRank(move[1]) + parseLetterFile(move[2]) + parseLetterRank(move[3]);
+    }
 }
 
 /**
@@ -1213,7 +1224,7 @@ function parseIndexRank(rank) {
 }
 
 /**
- * Convert index of file into frontend representation.
+ * Convert index of file into frontend or Lichess representation.
  *
  * @param {number} file - index of file
  * @returns {string} representation of file as in element id in frontend
