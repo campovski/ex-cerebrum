@@ -82,7 +82,9 @@ class Game {
         this.myTurn = this.playerWhite.id === 'excerebrum';
 
         this.initBoard();
-        this.getAvailableMoves();
+        if (this.myTurn) {
+            this.getAvailableMoves();
+        }
     }
 
     /**
@@ -193,6 +195,8 @@ class Game {
         }
 
         this.filterLegalMoves();
+        console.log('available: ', this.availableMoves);
+        console.log('legal: ', this.legalMoves);
     }
 
     /**
@@ -934,6 +938,7 @@ class Game {
      */
     filterLegalMoves() {
         console.log('number of moves ', this.availableMoves.length);
+        this.legalMoves = [];
         this.availableMoves.forEach((move) => {
             if (this.isMoveLegal(move)) {
                 this.legalMoves.push(move);

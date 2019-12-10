@@ -3,10 +3,10 @@ const EventEmitter = require('events');
 const ExCerebrum = require('./exCerebrum');
 const lichess = require('./lichess');
 
-/** {string} ID of the game currently playing */
+/** {string|null} ID of the game currently playing */
 let gameId = null;
 
-/** {ExCerebrum} bot */
+/** {ExCerebrum|null} bot */
 let bot = null;
 
 /**
@@ -112,10 +112,12 @@ function processGameStart(data) {
     console.log(bot.game.toString());
     if (bot.game.myTurn) {
         const respondWithMove = bot.makeMove();
-        if (respondWithMove !== null) {
+        if (respondWithMove) {
             lichess.api.makeMove(gameId, respondWithMove)
                 .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
                 .catch(reason => console.log(reason));
+        } else {
+            throw new Error('[processor.processGameStart] No move has been generated.');
         }
     }
 }
@@ -146,6 +148,9 @@ function processMove(move) {
         throw new Error('[processor.processMove] Bad argument!');
     }
 
+    bot.game.updateBoard(move);
+
+    // Emit event to frontend.
     eventEmitter.emit(c.EVENT_PROCESSOR_UPDATE_BOARD, {
         move: {
             from: move.substr(0, 2),
@@ -153,11 +158,15 @@ function processMove(move) {
         }
     });
 
-    const respondWithMove = bot.updateAndMakeMove(move);
-    if (respondWithMove !== null) {
-        lichess.api.makeMove(gameId, respondWithMove)
-            .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
-            .catch(reason => console.log(reason));
+    if (bot.game.myTurn) {
+        const respondWithMove = bot.makeMove(move);
+        if (respondWithMove) {
+            lichess.api.makeMove(gameId, respondWithMove)
+                .then(() => console.log(`[${gameId}] move ${respondWithMove} played!`))
+                .catch(reason => console.log(reason));
+        } else {
+            throw new Error('[processor.processMove] No move has been generated.');
+        }
     }
 }
 
