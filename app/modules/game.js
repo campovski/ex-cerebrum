@@ -932,12 +932,11 @@ class Game {
     }
 
     /**
-     * Remove all illegal moves from this.availableMoves.
+     * Filter all illegal moves from this.availableMoves.
      *
      * @returns {void}
      */
     filterLegalMoves() {
-        console.log('number of moves ', this.availableMoves.length);
         this.legalMoves = [];
         this.availableMoves.forEach((move) => {
             if (this.isMoveLegal(move)) {
@@ -953,10 +952,8 @@ class Game {
      * @returns {boolean} is move legal?
      */
     isMoveLegal(move) {
-        // Initialize return value to false, better safe then sorry.
-        let isLegal = false;
-
         // Mock make move.
+        const pieceOnMoveToSquare = this.board[move[3]][move[2]];
         if (this.board[move[1]][move[0]] === c.W_KING) {
             this.kingsPosition.white.file = move[2];
             this.kingsPosition.white.rank = move[3];
@@ -968,19 +965,16 @@ class Game {
         this.board[move[1]][move[0]] = c.EMPTY;
 
         // Check if king of the player on turn would be under attack after move.
+        let isLegal;
         if (this.whiteOnMove) {
-            if (!this.isWhiteKingAttacked()) {
-                isLegal = true;
-            }
+            isLegal = !this.isWhiteKingAttacked();
         } else {
-            if (!this.isBlackKingAttacked()) {
-                isLegal = true;
-            }
+            isLegal = !this.isBlackKingAttacked();
         }
 
         // Redo the mock move.
         this.board[move[1]][move[0]] = this.board[move[3]][move[2]];
-        this.board[move[3]][move[2]] = c.EMPTY;
+        this.board[move[3]][move[2]] = pieceOnMoveToSquare;
         if (this.board[move[1]][move[0]] === c.W_KING) {
             this.kingsPosition.white.file = move[0];
             this.kingsPosition.white.rank = move[1];
