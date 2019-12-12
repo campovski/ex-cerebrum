@@ -144,7 +144,7 @@ function processGameEnd(fullGameData) {
  */
 function processMove(move) {
     console.log(move);
-    if (typeof move !== 'string' && move.length !== 4) {
+    if (typeof move !== 'string') {
         throw new Error('[processor.processMove] Bad argument!');
     }
 
@@ -185,7 +185,6 @@ async function processGameStreamEventEnd(gameId) {
         processGameEnd(response['data']);
     } else {
         throw new Error('[processor.processGameStreamEventEnd] Stream quit unexpectedly.');
-        // TODO reconnect to stream instead of throwing error
     }
 }
 
