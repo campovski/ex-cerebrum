@@ -26,6 +26,8 @@ module.exports = Object.freeze({
     LICHESS_FILE_G: 'g',
     LICHESS_FILE_H: 'h',
     FRONTEND_FILES: ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'],
+    CASTLE_SHORT: 'O-O',
+    CASTLE_LONG: 'O-O-O',
 
     EMPTY: '*',
     W_PAWN: 'P',
