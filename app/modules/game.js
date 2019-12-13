@@ -49,18 +49,6 @@ class Game {
         /** {boolean} is white on move? */
         this.whiteOnMove = true;
 
-        /** {boolean} has white king and H-rook not moved */
-        this.whiteHasRightToCastleShort = true;
-
-        /** {boolean} has white king and A-rook not moved */
-        this.whiteHasRightToCastleLong = true;
-
-        /** {boolean} has black king and H-rook not moved */
-        this.blackHasRightToCastleShort = true;
-
-        /** {boolean} has black king and A-rook not moved */
-        this.blackHasRightToCastleLong = true;
-
         /** {Array<object>} move history */
         this.moveHistory = [];
 
@@ -156,101 +144,37 @@ class Game {
     /**
      * Updates chessboard for given move (e.g. 'e2e4').
      *
-     * @param {string} move - 4 letter string containing move data, or castle notation
+     * @param {string} move - 4 letter string containing move data
      * @returns {void}
      */
     updateBoard(move) {
-        // If no castle, we must parse the move data.
-        if (move !== c.CASTLE_SHORT && move !== c.CASTLE_LONG) {
-            const fileFrom = parseIndexFile(move.charAt(0));
-            const rankFrom = parseIndexRank(move.charAt(1));
-            const fileTo = parseIndexFile(move.charAt(2));
-            const rankTo = parseIndexRank(move.charAt(3));
+        const fileFrom = parseIndexFile(move.charAt(0));
+        const rankFrom = parseIndexRank(move.charAt(1));
+        const fileTo = parseIndexFile(move.charAt(2));
+        const rankTo = parseIndexRank(move.charAt(3));
 
-            // If rooks have moved from initial positions, players lose the right to castle.
-            switch (move.substr(0, 2)) {
-                case 'a1':
-                    this.whiteHasRightToCastleLong = false;
-                    break;
-                case 'h1':
-                    this.whiteHasRightToCastleShort = false;
-                    break;
-                case 'a8':
-                    this.blackHasRightToCastleLong = false;
-                    break;
-                case 'h8':
-                    this.blackHasRightToCastleShort = false;
-                    break;
-            }
+        // Remember move.
+        this.moveHistory.push({
+            fileFrom: fileFrom,
+            rankFrom: rankFrom,
+            fileTo: fileTo,
+            rankTo: rankTo
+        });
 
-            // Remember move.
-            this.moveHistory.push({
-                fileFrom: fileFrom,
-                rankFrom: rankFrom,
-                fileTo: fileTo,
-                rankTo: rankTo,
-                castle: false
-            });
-
-            // Update kings position if king was moved and lose right to castle.
-            if (this.board[rankFrom][fileFrom] === c.W_KING || this.board[rankFrom][fileFrom] === c.B_KING) {
-                if (this.whiteOnMove) {
-                    this.kingsPosition.white.file = fileTo;
-                    this.kingsPosition.white.rank = rankTo;
-                    this.whiteHasRightToCastleShort = false;
-                    this.whiteHasRightToCastleLong = false;
-                } else {
-                    this.kingsPosition.black.file = fileTo;
-                    this.kingsPosition.white.rank = rankTo;
-                    this.blackHasRightToCastleShort = false;
-                    this.blackHasRightToCastleLong = false;
-                }
-            }
-
-            // Make move.
-            this.board[rankTo][fileTo] = this.board[rankFrom][fileFrom];
-            this.board[rankFrom][fileFrom] = c.EMPTY;
-        } else {
-            // Remember move as castle.
-            this.moveHistory.push({
-                castle: true
-            });
-
+        // Update kings position if king was moved.
+        if (this.board[rankFrom][fileFrom] === c.W_KING || this.board[rankFrom][fileFrom] === c.B_KING) {
             if (this.whiteOnMove) {
-                this.whiteHasRightToCastleShort = false;
-                this.whiteHasRightToCastleLong = false;
-                if (move === c.CASTLE_SHORT) {
-                    this.board[0][4] = c.EMPTY;
-                    this.board[0][7] = c.EMPTY;
-                    this.board[0][6] = c.W_KING;
-                    this.board[0][5] = c.W_ROOK;
-                    this.kingsPosition.white.file = 7;
-                } else {
-                    this.board[0][4] = c.EMPTY;
-                    this.board[0][0] = c.EMPTY;
-                    this.board[0][2] = c.W_KING;
-                    this.board[0][3] = c.W_ROOK;
-                    this.kingsPosition.white.file = 2;
-                }
+                this.kingsPosition.white.file = fileTo;
+                this.kingsPosition.white.rank = rankTo;
             } else {
-                this.blackHasRightToCastleShort = false;
-                this.blackHasRightToCastleLong = false;
-                if (move === c.CASTLE_SHORT) {
-                    this.board[7][4] = c.EMPTY;
-                    this.board[7][7] = c.EMPTY;
-                    this.board[7][6] = c.B_KING;
-                    this.board[7][5] = c.B_ROOK;
-                    this.kingsPosition.white.file = 7;
-                } else {
-                    this.board[7][4] = c.EMPTY;
-                    this.board[7][0] = c.EMPTY;
-                    this.board[7][2] = c.B_KING;
-                    this.board[7][3] = c.B_ROOK;
-                    this.kingsPosition.white.file = 2;
-                }
+                this.kingsPosition.black.file = fileTo;
+                this.kingsPosition.white.rank = rankTo;
             }
         }
 
+        // Make move.
+        this.board[rankTo][fileTo] = this.board[rankFrom][fileFrom];
+        this.board[rankFrom][fileFrom] = c.EMPTY;
         this.myTurn = !this.myTurn;
         this.whiteOnMove = !this.whiteOnMove;
         console.log(this.toString());
@@ -309,13 +233,6 @@ class Game {
                 }
             }
         }
-
-        if (this.whiteHasRightToCastleShort) {
-            this.availableMoves.push(c.CASTLE_SHORT);
-        }
-        if (this.whiteHasRightToCastleLong) {
-            this.availableMoves.push(c.CASTLE_LONG);
-        }
     }
 
     /**
@@ -351,13 +268,6 @@ class Game {
                         break;
                 }
             }
-        }
-
-        if (this.blackHasRightToCastleShort) {
-            this.availableMoves.push(c.CASTLE_SHORT);
-        }
-        if (this.blackHasRightToCastleLong) {
-            this.availableMoves.push(c.CASTLE_LONG);
         }
     }
 
@@ -1027,6 +937,7 @@ class Game {
      * @returns {void}
      */
     filterLegalMoves() {
+        console.log('number of moves ', this.availableMoves.length);
         this.legalMoves = [];
         this.availableMoves.forEach((move) => {
             if (this.isMoveLegal(move)) {
@@ -1056,7 +967,6 @@ class Game {
 
         let isLegal;
         // Check if king of the player on turn would be under attack after move.
-        let isLegal;
         if (this.whiteOnMove) {
             isLegal = !this.isWhiteKingAttacked();
         } else {
