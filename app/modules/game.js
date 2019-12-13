@@ -1054,6 +1054,7 @@ class Game {
         this.board[move[3]][move[2]] = this.board[move[1]][move[0]];
         this.board[move[1]][move[0]] = c.EMPTY;
 
+        let isLegal;
         // Check if king of the player on turn would be under attack after move.
         let isLegal;
         if (this.whiteOnMove) {
