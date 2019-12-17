@@ -46,6 +46,27 @@ const gameData = {
     }
 };
 
+const customPosition1 = [
+    [c.W_ROOK, c.W_KNIGHT, c.W_BISHOP, c.EMPTY, c.W_KING, c.EMPTY, c.W_KNIGHT, c.W_ROOK],
+    [c.W_PAWN, c.W_PAWN, c.W_PAWN, c.W_PAWN, c.EMPTY, c.W_PAWN, c.W_PAWN, c.W_PAWN],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.W_PAWN, c.EMPTY, c.W_QUEEN, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.B_PAWN, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.B_KNIGHT, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.B_PAWN, c.B_PAWN, c.B_PAWN, c.EMPTY, c.B_KING, c.W_BISHOP, c.B_PAWN, c.B_PAWN],
+    [c.B_ROOK, c.EMPTY, c.B_BISHOP, c.B_QUEEN, c.EMPTY, c.B_BISHOP, c.B_KNIGHT, c.B_ROOK]
+];
+const customPosition2 = [
+    [c.W_ROOK, c.W_KNIGHT, c.W_BISHOP, c.EMPTY, c.W_KING, c.EMPTY, c.W_KNIGHT, c.W_ROOK],
+    [c.W_PAWN, c.W_PAWN, c.W_PAWN, c.W_PAWN, c.EMPTY, c.W_PAWN, c.W_PAWN, c.W_PAWN],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.W_PAWN, c.EMPTY, c.W_QUEEN, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.B_PAWN, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.B_KNIGHT, c.EMPTY, c.EMPTY, c.EMPTY, c.B_KING, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.B_PAWN, c.B_PAWN, c.B_PAWN, c.EMPTY, c.EMPTY, c.W_BISHOP, c.B_PAWN, c.B_PAWN],
+    [c.B_ROOK, c.EMPTY, c.B_BISHOP, c.B_QUEEN, c.EMPTY, c.B_BISHOP, c.B_KNIGHT, c.B_ROOK]
+];
+
 describe('Game', () => {
     describe('.isWhiteKingAttacked()', () => {
         beforeEach(() => {
@@ -698,6 +719,156 @@ describe('Game', () => {
             const file = game.kingsPosition.white.file + 2;
             const rank = game.kingsPosition.white.rank + 1;
             assert.strictEqual(game.willBlackKingNotAttackWhite(file, rank), true);
+        });
+    });
+
+    describe('Promotions', () => {
+        beforeEach(() => {
+            game = new Game(gameData);
+            game.whiteOnMove = true;
+            game.setPosition(Array.from(Array(8), _ => Array(8).fill(c.EMPTY)));
+        });
+
+        it('should be able to promote as white', () => {
+            game.whiteOnMove = true;
+            game.board[6][4] = c.W_PAWN;
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 4);
+            game.legalMoves.forEach(move => {
+                assert(move.length === 5);
+            });
+        });
+        it('should be able to promote with capture as white', () => {
+            game.whiteOnMove = true;
+            game.board[6][4] = c.W_PAWN;
+            game.board[7][3] = c.B_ROOK;
+            game.board[7][5] = c.B_ROOK;
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 12);
+            game.legalMoves.forEach(move => {
+                assert(move.length === 5);
+            });
+        });
+        it('should not be able to promote and capture your piece as white', () => {
+            game.whiteOnMove = true;
+            game.board[6][4] = c.W_PAWN;
+            game.board[7][3] = c.W_ROOK;
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 4 + 14); // 14 available moves with rook
+            game.legalMoves.forEach(move => {
+                if (move[0] === 4 && move[1] === 6) {
+                    assert(move.length === 5);
+                }
+            });
+        });
+        it('should be able to promote as black', () => {
+            game.whiteOnMove = false;
+            game.board[1][4] = c.B_PAWN;
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 4);
+            game.legalMoves.forEach(move => {
+                assert(move.length === 5);
+            });
+        });
+        it('should be able to promote with capture as black', () => {
+            game.whiteOnMove = false;
+            game.board[1][4] = c.B_PAWN;
+            game.board[0][3] = c.W_ROOK;
+            game.board[0][5] = c.W_ROOK;
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 12);
+            game.legalMoves.forEach(move => {
+                assert(move.length === 5);
+            });
+        });
+        it('should not be able to promote and capture your piece as black', () => {
+            game.whiteOnMove = false;
+            game.board[1][4] = c.B_PAWN;
+            game.board[0][3] = c.B_ROOK;
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 4 + 14); // 14 available moves with rook
+            game.legalMoves.forEach(move => {
+                if (move[0] === 4 && move[1] === 6) {
+                    assert(move.length === 5);
+                }
+            });
+        });
+    });
+
+    describe('Custom position 1', () => {
+        beforeEach(() => {
+            game = new Game(gameData);
+            game.setPosition(customPosition1);
+            game.kingsPosition.black.file = 4;
+            game.kingsPosition.black.rank = 6;
+            game.whiteOnMove = false;
+        });
+        it('should test that black king is not attacked', () => {
+            assert.strictEqual(game.isBlackKingAttacked(), false);
+        });
+        it('should have 3 illegal moves', () => {
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.availableMoves.length - 3 === game.legalMoves.length);
+        });
+        it('should be able to move king to defined places', () => {
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            [
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file + 1, game.kingsPosition.black.rank],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file - 1, game.kingsPosition.black.rank - 1],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file + 1, game.kingsPosition.black.rank - 1]
+            ].forEach(move => {
+                let includes = false;
+                game.legalMoves.forEach(legalMove => {
+                    if (legalMove[0] === move[0] && legalMove[1] === move[1] && legalMove[2] === move[2] && legalMove[3] === move[3]) {
+                        includes = true;
+                    }
+                });
+                assert(includes);
+            });
+        });
+    });
+
+    describe('Custom position 2', () => {
+        beforeEach(() => {
+            game = new Game(gameData);
+            game.setPosition(customPosition2);
+            game.kingsPosition.black.file = 4;
+            game.kingsPosition.black.rank = 5;
+            game.whiteOnMove = false;
+        });
+        it('should test that black king is attacked', () => {
+            assert.strictEqual(game.isBlackKingAttacked(), true);
+        });
+        it('should have 4 legal moves', () => {
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 4);
+        });
+        it('should be able to move king to defined places', () => {
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            [
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file - 1, game.kingsPosition.black.rank],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file + 1, game.kingsPosition.black.rank],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file + 1, game.kingsPosition.black.rank + 1],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file, game.kingsPosition.black.rank + 1]
+            ].forEach(move => {
+                let includes = false;
+                game.legalMoves.forEach(legalMove => {
+                    if (legalMove[0] === move[0] && legalMove[1] === move[1] && legalMove[2] === move[2] && legalMove[3] === move[3]) {
+                        includes = true;
+                    }
+                });
+                assert(includes);
+            });
         });
     });
 });

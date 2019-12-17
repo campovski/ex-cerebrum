@@ -52,10 +52,10 @@ class Game {
         /** {Array<object>} move history */
         this.moveHistory = [];
 
-        /** {Array<Array<number>>} available moves */
+        /** {Array<Array<int|string>>} available moves */
         this.availableMoves = [];
 
-        /** {Array<Array<number>>} legal moves, a "subset" of this.availableMoves */
+        /** {Array<Array<int|string>>} legal moves, a "subset" of this.availableMoves */
         this.legalMoves = [];
 
         /** {object} remember kings position */
@@ -142,9 +142,10 @@ class Game {
     }
 
     /**
-     * Updates chessboard for given move (e.g. 'e2e4').
+     * Updates chessboard for given move (e.g. 'e2e4' or 'h7h8q'). Mind that
+     * promotions are always in lower case, even for white!
      *
-     * @param {string} move - 4 letter string containing move data
+     * @param {string} move - 4 or 5 letter string containing move data
      * @returns {void}
      */
     updateBoard(move) {
@@ -152,13 +153,19 @@ class Game {
         const rankFrom = parseIndexRank(move.charAt(1));
         const fileTo = parseIndexFile(move.charAt(2));
         const rankTo = parseIndexRank(move.charAt(3));
+        let promotedTo = move.charAt(4) !== '' ? move.charAt(4) : null;
+
+        if (promotedTo !== null && rankTo === c.RANK_8) {
+            promotedTo = promotedTo.toUpperCase();
+        }
 
         // Remember move.
         this.moveHistory.push({
             fileFrom: fileFrom,
             rankFrom: rankFrom,
             fileTo: fileTo,
-            rankTo: rankTo
+            rankTo: rankTo,
+            promotedTo: promotedTo
         });
 
         // Update kings position if king was moved.
@@ -171,7 +178,11 @@ class Game {
         }
 
         // Make move.
-        this.board[rankTo][fileTo] = this.board[rankFrom][fileFrom];
+        if (promotedTo === null) {
+            this.board[rankTo][fileTo] = this.board[rankFrom][fileFrom];
+        } else {
+            this.board[rankTo][fileTo] = promotedTo;
+        }
         this.board[rankFrom][fileFrom] = c.EMPTY;
         this.myTurn = !this.myTurn;
         this.whiteOnMove = !this.whiteOnMove;
@@ -192,9 +203,9 @@ class Game {
         }
 
         this.filterLegalMoves();
-        console.log(this.toString());
         console.log('available: ', this.availableMoves);
         console.log('legal: ', this.legalMoves);
+        console.log(this.toString());
     }
 
     /**
@@ -262,7 +273,6 @@ class Game {
                         this.getMovesWithBlackQueen(file, rank);
                         break;
                     case c.B_KING:
-                        const n = this.availableMoves.length;
                         this.getMovesWithBlackKing(file, rank);
                         break;
                 }
@@ -279,34 +289,56 @@ class Game {
      * @returns {void}
      */
     getMovesWithWhitePawn(file, rank) {
-        // Advance one rank.
-        if (this.board[rank + 1][file] === c.EMPTY) {
-            this.availableMoves.push([file, rank, file, rank + 1]);
-        }
+        // No promotion.
+        if (rank <= c.RANK_6) {
+            // Advance one rank.
+            if (this.board[rank + 1][file] === c.EMPTY) {
+                this.availableMoves.push([file, rank, file, rank + 1]);
+            }
 
-        // Advance two ranks if in starting position.
-        if (rank === c.RANK_2 &&
-            this.board[rank + 1][file] === c.EMPTY &&
-            this.board[rank + 2][file] === c.EMPTY) {
-            this.availableMoves.push([file, rank, file, rank + 2]);
-        }
+            // Advance two ranks if in starting position.
+            if (rank === c.RANK_2 &&
+                this.board[rank + 1][file] === c.EMPTY &&
+                this.board[rank + 2][file] === c.EMPTY) {
+                this.availableMoves.push([file, rank, file, rank + 2]);
+            }
 
-        // Capture enemy piece diagonally.
-        if (file !== c.FILE_A && isPieceBlack(this.board[rank + 1][file - 1])) {
-            this.availableMoves.push([file, rank, file - 1, rank + 1]);
-        }
-        if (file !== c.FILE_H && isPieceBlack(this.board[rank + 1][file + 1])) {
-            this.availableMoves.push([file, rank, file + 1, rank + 1]);
-        }
+            // Capture enemy piece diagonally.
+            if (file !== c.FILE_A && isPieceBlack(this.board[rank + 1][file - 1])) {
+                this.availableMoves.push([file, rank, file - 1, rank + 1]);
+            }
+            if (file !== c.FILE_H && isPieceBlack(this.board[rank + 1][file + 1])) {
+                this.availableMoves.push([file, rank, file + 1, rank + 1]);
+            }
 
-        // En passant.
-        if (this.moveHistory.length > 1) {
-            const lastMove = this.moveHistory[this.moveHistory.length - 1];
-            if (this.board[lastMove.rankTo][lastMove.fileTo] === c.B_PAWN &&
-                lastMove.rankTo - lastMove.rankFrom === 2 &&
-                rank === lastMove.rankTo &&
-                (file === lastMove.fileTo + 1 || file === lastMove.fileTo - 1)) {
-                this.availableMoves.push([file, rank, lastMove.fileTo, rank + 1]);
+            // En passant.
+            if (this.moveHistory.length > 1) {
+                const lastMove = this.moveHistory[this.moveHistory.length - 1];
+                if (this.board[lastMove.rankTo][lastMove.fileTo] === c.B_PAWN &&
+                    lastMove.rankTo - lastMove.rankFrom === 2 &&
+                    rank === lastMove.rankTo &&
+                    (file === lastMove.fileTo + 1 || file === lastMove.fileTo - 1)) {
+                    this.availableMoves.push([file, rank, lastMove.fileTo, rank + 1]);
+                }
+            }
+        } else { // promotion
+            // Advance one rank.
+            if (this.board[rank + 1][file] === c.EMPTY) {
+                [c.W_KNIGHT, c.W_BISHOP, c.W_ROOK, c.W_QUEEN].forEach(piece => {
+                    this.availableMoves.push([file, rank, file, rank + 1, piece]);
+                });
+            }
+
+            // Capture enemy piece diagonally.
+            if (file !== c.FILE_A && isPieceBlack(this.board[rank + 1][file - 1])) {
+                [c.W_KNIGHT, c.W_BISHOP, c.W_ROOK, c.W_QUEEN].forEach(piece => {
+                    this.availableMoves.push([file, rank, file - 1, rank + 1, piece]);
+                });
+            }
+            if (file !== c.FILE_H && isPieceBlack(this.board[rank + 1][file + 1])) {
+                [c.W_KNIGHT, c.W_BISHOP, c.W_ROOK, c.W_QUEEN].forEach(piece => {
+                    this.availableMoves.push([file, rank, file + 1, rank + 1, piece]);
+                });
             }
         }
     }
@@ -320,34 +352,56 @@ class Game {
      * @returns {void}
      */
     getMovesWithBlackPawn(file, rank) {
-        // Advance one rank.
-        if (this.board[rank - 1][file] === c.EMPTY) {
-            this.availableMoves.push([file, rank, file, rank - 1]);
-        }
+        // No promotion
+        if (rank >= c.RANK_3) {
+            // Advance one rank.
+            if (this.board[rank - 1][file] === c.EMPTY) {
+                this.availableMoves.push([file, rank, file, rank - 1]);
+            }
 
-        // Advance two ranks if in starting position.
-        if (rank === c.RANK_7 &&
-            this.board[rank - 1][file] === c.EMPTY &&
-            this.board[rank - 2][file] === c.EMPTY) {
-            this.availableMoves.push([file, rank, file, rank - 2]);
-        }
+            // Advance two ranks if in starting position.
+            if (rank === c.RANK_7 &&
+                this.board[rank - 1][file] === c.EMPTY &&
+                this.board[rank - 2][file] === c.EMPTY) {
+                this.availableMoves.push([file, rank, file, rank - 2]);
+            }
 
-        // Capture enemy piece diagonally.
-        if (file !== c.FILE_A && isPieceWhite(this.board[rank - 1][file - 1])) {
-            this.availableMoves.push([file, rank, file - 1, rank - 1]);
-        }
-        if (file !== c.FILE_H && isPieceWhite(this.board[rank - 1][file + 1])) {
-            this.availableMoves.push([file, rank, file + 1, rank - 1]);
-        }
+            // Capture enemy piece diagonally.
+            if (file !== c.FILE_A && isPieceWhite(this.board[rank - 1][file - 1])) {
+                this.availableMoves.push([file, rank, file - 1, rank - 1]);
+            }
+            if (file !== c.FILE_H && isPieceWhite(this.board[rank - 1][file + 1])) {
+                this.availableMoves.push([file, rank, file + 1, rank - 1]);
+            }
 
-        // En passant.
-        if (this.moveHistory.length > 1) {
-            const lastMove = this.moveHistory[this.moveHistory.length - 1];
-            if (this.board[lastMove.rankTo][lastMove.fileTo] === c.W_PAWN &&
-                lastMove.rankTo - lastMove.rankFrom === 2 &&
-                rank === lastMove.rankTo &&
-                (file === lastMove.fileTo + 1 || file === lastMove.fileTo - 1)) {
-                this.availableMoves.push([file, rank, lastMove.fileTo, rank - 1]);
+            // En passant.
+            if (this.moveHistory.length > 1) {
+                const lastMove = this.moveHistory[this.moveHistory.length - 1];
+                if (this.board[lastMove.rankTo][lastMove.fileTo] === c.W_PAWN &&
+                    lastMove.rankTo - lastMove.rankFrom === 2 &&
+                    rank === lastMove.rankTo &&
+                    (file === lastMove.fileTo + 1 || file === lastMove.fileTo - 1)) {
+                    this.availableMoves.push([file, rank, lastMove.fileTo, rank - 1]);
+                }
+            }
+        } else {
+            // Advance one rank.
+            if (this.board[rank - 1][file] === c.EMPTY) {
+                [c.B_KNIGHT, c.B_BISHOP, c.B_ROOK, c.B_QUEEN].forEach(piece => {
+                    this.availableMoves.push([file, rank, file, rank - 1, piece]);
+                });
+            }
+
+            // Capture enemy piece diagonally.
+            if (file !== c.FILE_A && isPieceWhite(this.board[rank - 1][file - 1])) {
+                [c.B_KNIGHT, c.B_BISHOP, c.B_ROOK, c.B_QUEEN].forEach(piece => {
+                    this.availableMoves.push([file, rank, file - 1, rank - 1, piece]);
+                });
+            }
+            if (file !== c.FILE_H && isPieceWhite(this.board[rank - 1][file + 1])) {
+                [c.B_KNIGHT, c.B_BISHOP, c.B_ROOK, c.B_QUEEN].forEach(piece => {
+                    this.availableMoves.push([file, rank, file + 1, rank - 1, piece]);
+                });
             }
         }
     }
@@ -915,8 +969,6 @@ class Game {
      * @returns {boolean} is white king not by the black one
      */
     willWhiteKingNotAttackBlack(newFile, newRank) {
-        console.log(Math.abs(this.kingsPosition.black.file - newFile));
-        console.log(Math.abs(this.kingsPosition.black.rank - newRank));
         return !(Math.abs(this.kingsPosition.black.file - newFile) < 2 && Math.abs(this.kingsPosition.black.rank - newRank) < 2);
     }
 
@@ -1240,13 +1292,14 @@ class Game {
     }
 
     /**
-     * Convert move from 4D array of board indices to UCI format.
+     * Convert move from 4D or 5D array of board indices to UCI format.
      *
-     * @param {Array<int>} move - 4D vector representing move
+     * @param {Array<int|string>} move - 4D or 5D vector representing move
      * @returns {string} UCI representation of move
      */
     serializeMove(move) {
-        return parseLetterFile(move[0]) + parseLetterRank(move[1]) + parseLetterFile(move[2]) + parseLetterRank(move[3]);
+        return parseLetterFile(move[0]) + parseLetterRank(move[1]) + parseLetterFile(move[2]) +
+            parseLetterRank(move[3]) + (move[4] !== undefined ? move[4].toLowerCase() : '');
     }
 }
 
