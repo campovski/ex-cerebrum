@@ -66,6 +66,26 @@ const customPosition2 = [
     [c.B_PAWN, c.B_PAWN, c.B_PAWN, c.EMPTY, c.EMPTY, c.W_BISHOP, c.B_PAWN, c.B_PAWN],
     [c.B_ROOK, c.EMPTY, c.B_BISHOP, c.B_QUEEN, c.EMPTY, c.B_BISHOP, c.B_KNIGHT, c.B_ROOK]
 ];
+const customPosition3 = [
+    [c.W_ROOK, c.EMPTY, c.EMPTY, c.EMPTY, c.W_KING, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.W_PAWN, c.W_PAWN, c.W_PAWN, c.EMPTY, c.EMPTY, c.W_PAWN, c.W_PAWN, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.W_PAWN, c.EMPTY, c.W_KNIGHT, c.EMPTY, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.W_KNIGHT, c.EMPTY, c.W_PAWN, c.EMPTY],
+    [c.EMPTY, c.B_PAWN, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.B_PAWN, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.B_PAWN, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.B_QUEEN, c.EMPTY, c.EMPTY, c.B_KING, c.W_ROOK],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.B_ROOK]
+];
+const customPosition4 = [
+    [c.W_ROOK, c.W_KNIGHT, c.W_BISHOP, c.W_QUEEN, c.W_KING, c.EMPTY, c.EMPTY, c.W_ROOK],
+    [c.W_PAWN, c.W_PAWN, c.W_PAWN, c.W_PAWN, c.EMPTY, c.W_PAWN, c.W_PAWN, c.W_PAWN],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.B_PAWN, c.EMPTY, c.EMPTY, c.EMPTY, c.W_PAWN, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.W_KNIGHT, c.EMPTY, c.EMPTY, c.EMPTY],
+    [c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.EMPTY, c.B_KNIGHT, c.EMPTY, c.EMPTY],
+    [c.EMPTY, c.B_PAWN, c.B_PAWN, c.B_PAWN, c.B_PAWN, c.B_KING, c.B_PAWN, c.B_PAWN],
+    [c.B_ROOK, c.B_KNIGHT, c.B_BISHOP, c.B_QUEEN, c.EMPTY, c.B_BISHOP, c.EMPTY, c.B_ROOK]
+];
 
 describe('Game', () => {
     describe('.isWhiteKingAttacked()', () => {
@@ -860,6 +880,77 @@ describe('Game', () => {
                 [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file + 1, game.kingsPosition.black.rank],
                 [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file + 1, game.kingsPosition.black.rank + 1],
                 [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file, game.kingsPosition.black.rank + 1]
+            ].forEach(move => {
+                let includes = false;
+                game.legalMoves.forEach(legalMove => {
+                    if (legalMove[0] === move[0] && legalMove[1] === move[1] && legalMove[2] === move[2] && legalMove[3] === move[3]) {
+                        includes = true;
+                    }
+                });
+                assert(includes);
+            });
+        });
+    });
+
+    describe('Custom position 3', () => {
+        beforeEach(() => {
+            game = new Game(gameData);
+            game.setPosition(customPosition3);
+            game.kingsPosition.black.file = 6;
+            game.kingsPosition.black.rank = 6;
+            game.whiteOnMove = false;
+        });
+        it('should test that black king is attacked', () => {
+            assert.strictEqual(game.isBlackKingAttacked(), true);
+        });
+        it('should have 4 legal moves', () => {
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 4);
+        });
+        it('should be able to prevent check', () => {
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            [
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file - 1, game.kingsPosition.black.rank + 1],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file, game.kingsPosition.black.rank + 1],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file + 1, game.kingsPosition.black.rank],
+                [7, 7, 7, 6]
+            ].forEach(move => {
+                let includes = false;
+                game.legalMoves.forEach(legalMove => {
+                    if (legalMove[0] === move[0] && legalMove[1] === move[1] && legalMove[2] === move[2] && legalMove[3] === move[3]) {
+                        includes = true;
+                    }
+                });
+                assert(includes);
+            });
+        });
+    });
+
+    describe('Custom position 4', () => {
+        beforeEach(() => {
+            game = new Game(gameData);
+            game.setPosition(customPosition4);
+            game.kingsPosition.black.file = 5;
+            game.kingsPosition.black.rank = 6;
+            game.whiteOnMove = false;
+        });
+        it('should test that black king is attacked', () => {
+            assert.strictEqual(game.isBlackKingAttacked(), true);
+        });
+        it('should have 3 legal moves', () => {
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            assert(game.legalMoves.length === 3);
+        });
+        it('should be able to move king from check', () => {
+            game.getAvailableMoves();
+            game.filterLegalMoves();
+            [
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file - 1, game.kingsPosition.black.rank - 1],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file - 1, game.kingsPosition.black.rank + 1],
+                [game.kingsPosition.black.file, game.kingsPosition.black.rank, game.kingsPosition.black.file + 1, game.kingsPosition.black.rank + 1]
             ].forEach(move => {
                 let includes = false;
                 game.legalMoves.forEach(legalMove => {

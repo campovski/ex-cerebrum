@@ -174,7 +174,7 @@ class Game {
             this.kingsPosition.white.rank = rankTo;
         } else if (this.board[rankFrom][fileFrom] === c.B_KING) {
             this.kingsPosition.black.file = fileTo;
-            this.kingsPosition.white.rank = rankTo;
+            this.kingsPosition.black.rank = rankTo;
         }
 
         // Make move.
@@ -203,6 +203,8 @@ class Game {
         }
 
         this.filterLegalMoves();
+        console.log(this.toString());
+        console.log(this.kingsPosition);
         console.log('available: ', this.availableMoves);
         console.log('legal: ', this.legalMoves);
         console.log(this.toString());
