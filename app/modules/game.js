@@ -49,6 +49,18 @@ class Game {
         /** {boolean} is white on move? */
         this.whiteOnMove = true;
 
+        /** {object} do players have a right to castle */
+        this.hasRightToCastle = {
+            white: {
+                short: true,
+                long: true
+            },
+            black: {
+                short: true,
+                long: true
+            }
+        };
+
         /** {Array<object>} move history */
         this.moveHistory = [];
 
@@ -143,7 +155,8 @@ class Game {
 
     /**
      * Updates chessboard for given move (e.g. 'e2e4' or 'h7h8q'). Mind that
-     * promotions are always in lower case, even for white!
+     * promotions are always in lower case, even for white! Also, castling is
+     * not O-O, but e1g1 for example.
      *
      * @param {string} move - 4 or 5 letter string containing move data
      * @returns {void}
@@ -153,28 +166,58 @@ class Game {
         const rankFrom = parseIndexRank(move.charAt(1));
         const fileTo = parseIndexFile(move.charAt(2));
         const rankTo = parseIndexRank(move.charAt(3));
+        let castle = false;
         let promotedTo = move.charAt(4) !== '' ? move.charAt(4) : null;
-
         if (promotedTo !== null && rankTo === c.RANK_8) {
             promotedTo = promotedTo.toUpperCase();
         }
 
-        // Remember move.
-        this.moveHistory.push({
-            fileFrom: fileFrom,
-            rankFrom: rankFrom,
-            fileTo: fileTo,
-            rankTo: rankTo,
-            promotedTo: promotedTo
-        });
-
-        // Update kings position if king was moved.
+        // Update kings position if king was moved. Also lose the right to castle
+        // and check if castling has been done.
         if (this.board[rankFrom][fileFrom] === c.W_KING) {
             this.kingsPosition.white.file = fileTo;
             this.kingsPosition.white.rank = rankTo;
+            this.hasRightToCastle.white.short = false;
+            this.hasRightToCastle.white.long = false;
+            if (move === 'e1g1') {
+                this.board[c.RANK_1][c.FILE_H] = c.EMPTY;
+                this.board[c.RANK_1][c.FILE_F] = c.W_ROOK;
+                castle = true;
+            } else if (move === 'e1c1') {
+                this.board[c.RANK_1][c.FILE_A] = c.EMPTY;
+                this.board[c.RANK_1][c.FILE_D] = c.W_ROOK;
+                castle = true;
+            }
         } else if (this.board[rankFrom][fileFrom] === c.B_KING) {
             this.kingsPosition.black.file = fileTo;
             this.kingsPosition.black.rank = rankTo;
+            this.hasRightToCastle.black.short = false;
+            this.hasRightToCastle.black.long = false;
+            if (move === 'e8g8') {
+                this.board[c.RANK_8][c.FILE_H] = c.EMPTY;
+                this.board[c.RANK_8][c.FILE_F] = c.B_ROOK;
+                castle = true;
+            } else if (move === 'e8c8') {
+                this.board[c.RANK_8][c.FILE_A] = c.EMPTY;
+                this.board[c.RANK_8][c.FILE_D] = c.B_ROOK;
+                castle = true;
+            }
+        }
+
+        const moveFrom = move.substr(0, 2);
+        switch (moveFrom) {
+            case 'a1':
+                this.hasRightToCastle.white.long = false;
+                break;
+            case 'h1':
+                this.hasRightToCastle.white.short = false;
+                break;
+            case 'a8':
+                this.hasRightToCastle.black.long = false;
+                break;
+            case 'h8':
+                this.hasRightToCastle.black.short = false;
+                break;
         }
 
         // Make move.
@@ -184,6 +227,17 @@ class Game {
             this.board[rankTo][fileTo] = promotedTo;
         }
         this.board[rankFrom][fileFrom] = c.EMPTY;
+
+        // Remember move.
+        this.moveHistory.push({
+            fileFrom: fileFrom,
+            rankFrom: rankFrom,
+            fileTo: fileTo,
+            rankTo: rankTo,
+            castle: castle,
+            promotedTo: promotedTo
+        });
+
         this.myTurn = !this.myTurn;
         this.whiteOnMove = !this.whiteOnMove;
     }
@@ -244,6 +298,21 @@ class Game {
                 }
             }
         }
+
+        // Add castling.
+        if (this.hasRightToCastle.white.short &&
+            this.board[c.RANK_1][c.FILE_F] === c.EMPTY &&
+            this.board[c.RANK_1][c.FILE_G] === c.EMPTY
+        ) {
+            this.availableMoves.push(c.CASTLE_SHORT);
+        }
+        if (this.hasRightToCastle.white.long &&
+            this.board[c.RANK_1][c.FILE_D] === c.EMPTY &&
+            this.board[c.RANK_1][c.FILE_C] === c.EMPTY &&
+            this.board[c.RANK_1][c.FILE_B] === c.EMPTY
+        ) {
+            this.availableMoves.push(c.CASTLE_LONG);
+        }
     }
 
     /**
@@ -279,6 +348,21 @@ class Game {
                         break;
                 }
             }
+        }
+
+        // Add castling.
+        if (this.hasRightToCastle.black.short &&
+            this.board[c.RANK_8][c.FILE_F] === c.EMPTY &&
+            this.board[c.RANK_8][c.FILE_G] === c.EMPTY
+        ) {
+            this.availableMoves.push(c.CASTLE_SHORT);
+        }
+        if (this.hasRightToCastle.black.long &&
+            this.board[c.RANK_8][c.FILE_D] === c.EMPTY &&
+            this.board[c.RANK_8][c.FILE_C] === c.EMPTY &&
+            this.board[c.RANK_8][c.FILE_B] === c.EMPTY
+        ) {
+            this.availableMoves.push(c.CASTLE_LONG);
         }
     }
 
@@ -1008,34 +1092,42 @@ class Game {
      */
     isMoveLegal(move) {
         let isLegal;
-        // Mock make move.
-        const pieceOnMoveToSquare = this.board[move[3]][move[2]];
-        this.board[move[3]][move[2]] = this.board[move[1]][move[0]];
-        this.board[move[1]][move[0]] = c.EMPTY;
-        if (this.board[move[3]][move[2]] === c.W_KING) {
-            this.kingsPosition.white.file = move[2];
-            this.kingsPosition.white.rank = move[3];
-        } else if (this.board[move[3]][move[2]] === c.B_KING) {
-            this.kingsPosition.black.file = move[2];
-            this.kingsPosition.black.rank = move[3];
-        }
 
-        // Check if king of the player on turn would be under attack after move.
-        if (this.whiteOnMove) {
-            isLegal = !this.isWhiteKingAttacked();
-        } else {
-            isLegal = !this.isBlackKingAttacked();
-        }
+        switch (move) {
+            case c.CASTLE_SHORT:
+                break;
+            case c.CASTLE_LONG:
+                break;
+            default:
+                // Mock make move.
+                const pieceOnMoveToSquare = this.board[move[3]][move[2]];
+                this.board[move[3]][move[2]] = this.board[move[1]][move[0]];
+                this.board[move[1]][move[0]] = c.EMPTY;
+                if (this.board[move[3]][move[2]] === c.W_KING) {
+                    this.kingsPosition.white.file = move[2];
+                    this.kingsPosition.white.rank = move[3];
+                } else if (this.board[move[3]][move[2]] === c.B_KING) {
+                    this.kingsPosition.black.file = move[2];
+                    this.kingsPosition.black.rank = move[3];
+                }
 
-        // Redo the mock move.
-        this.board[move[1]][move[0]] = this.board[move[3]][move[2]];
-        this.board[move[3]][move[2]] = pieceOnMoveToSquare;
-        if (this.board[move[1]][move[0]] === c.W_KING) {
-            this.kingsPosition.white.file = move[0];
-            this.kingsPosition.white.rank = move[1];
-        } else if (this.board[move[1]][move[0]] === c.B_KING) {
-            this.kingsPosition.black.file = move[0];
-            this.kingsPosition.black.rank = move[1];
+                // Check if king of the player on turn would be under attack after move.
+                if (this.whiteOnMove) {
+                    isLegal = !this.isWhiteKingAttacked();
+                } else {
+                    isLegal = !this.isBlackKingAttacked();
+                }
+
+                // Redo the mock move.
+                this.board[move[1]][move[0]] = this.board[move[3]][move[2]];
+                this.board[move[3]][move[2]] = pieceOnMoveToSquare;
+                if (this.board[move[1]][move[0]] === c.W_KING) {
+                    this.kingsPosition.white.file = move[0];
+                    this.kingsPosition.white.rank = move[1];
+                } else if (this.board[move[1]][move[0]] === c.B_KING) {
+                    this.kingsPosition.black.file = move[0];
+                    this.kingsPosition.black.rank = move[1];
+                }
         }
 
         return isLegal;
