@@ -162,14 +162,12 @@ class Game {
         });
 
         // Update kings position if king was moved.
-        if (this.board[rankFrom][fileFrom] === c.W_KING || this.board[rankFrom][fileFrom] === c.B_KING) {
-            if (this.whiteOnMove) {
-                this.kingsPosition.white.file = fileTo;
-                this.kingsPosition.white.rank = rankTo;
-            } else {
-                this.kingsPosition.black.file = fileTo;
-                this.kingsPosition.white.rank = rankTo;
-            }
+        if (this.board[rankFrom][fileFrom] === c.W_KING) {
+            this.kingsPosition.white.file = fileTo;
+            this.kingsPosition.white.rank = rankTo;
+        } else if (this.board[rankFrom][fileFrom] === c.B_KING) {
+            this.kingsPosition.black.file = fileTo;
+            this.kingsPosition.white.rank = rankTo;
         }
 
         // Make move.
@@ -177,7 +175,6 @@ class Game {
         this.board[rankFrom][fileFrom] = c.EMPTY;
         this.myTurn = !this.myTurn;
         this.whiteOnMove = !this.whiteOnMove;
-        console.log(this.toString());
     }
 
     /**
@@ -195,6 +192,7 @@ class Game {
         }
 
         this.filterLegalMoves();
+        console.log(this.toString());
         console.log('available: ', this.availableMoves);
         console.log('legal: ', this.legalMoves);
     }
@@ -264,6 +262,7 @@ class Game {
                         this.getMovesWithBlackQueen(file, rank);
                         break;
                     case c.B_KING:
+                        const n = this.availableMoves.length;
                         this.getMovesWithBlackKing(file, rank);
                         break;
                 }
@@ -899,7 +898,7 @@ class Game {
         }
 
         // W, E
-        if (file >= c.FILE_B && isPieceNotBlack(this.board[rank][file - 1]) && this.willWhiteKingNotAttackBlack(file - 1, rank)) {
+        if (file >= c.FILE_B && isPieceNotBlack(this.board[rank][file - 1]) && this.willBlackKingNotAttackWhite(file - 1, rank)) {
             this.availableMoves.push([file, rank, file - 1, rank]);
         }
         if (file <= c.FILE_G && isPieceNotBlack(this.board[rank][file + 1]) && this.willBlackKingNotAttackWhite(file + 1, rank)) {
@@ -916,6 +915,8 @@ class Game {
      * @returns {boolean} is white king not by the black one
      */
     willWhiteKingNotAttackBlack(newFile, newRank) {
+        console.log(Math.abs(this.kingsPosition.black.file - newFile));
+        console.log(Math.abs(this.kingsPosition.black.rank - newRank));
         return !(Math.abs(this.kingsPosition.black.file - newFile) < 2 && Math.abs(this.kingsPosition.black.rank - newRank) < 2);
     }
 
@@ -937,7 +938,6 @@ class Game {
      * @returns {void}
      */
     filterLegalMoves() {
-        console.log('number of moves ', this.availableMoves.length);
         this.legalMoves = [];
         this.availableMoves.forEach((move) => {
             if (this.isMoveLegal(move)) {
@@ -953,19 +953,19 @@ class Game {
      * @returns {boolean} is move legal?
      */
     isMoveLegal(move) {
+        let isLegal;
         // Mock make move.
         const pieceOnMoveToSquare = this.board[move[3]][move[2]];
-        if (this.board[move[1]][move[0]] === c.W_KING) {
+        this.board[move[3]][move[2]] = this.board[move[1]][move[0]];
+        this.board[move[1]][move[0]] = c.EMPTY;
+        if (this.board[move[3]][move[2]] === c.W_KING) {
             this.kingsPosition.white.file = move[2];
             this.kingsPosition.white.rank = move[3];
-        } else if (this.board[move[1]][move[0]] === c.B_KING) {
+        } else if (this.board[move[3]][move[2]] === c.B_KING) {
             this.kingsPosition.black.file = move[2];
             this.kingsPosition.black.rank = move[3];
         }
-        this.board[move[3]][move[2]] = this.board[move[1]][move[0]];
-        this.board[move[1]][move[0]] = c.EMPTY;
 
-        let isLegal;
         // Check if king of the player on turn would be under attack after move.
         if (this.whiteOnMove) {
             isLegal = !this.isWhiteKingAttacked();
@@ -997,7 +997,7 @@ class Game {
         const rank = this.kingsPosition.white.rank;
 
         // Attacked by pawn?
-        if (rank <= c.RANK_6 && ((file >= c.FILE_B && this.board[file - 1][rank + 1] === c.B_PAWN) || (file <= c.FILE_G && this.board[file + 1][rank + 1] === c.B_PAWN))) {
+        if (rank <= c.RANK_6 && ((file >= c.FILE_B && this.board[rank + 1][file - 1] === c.B_PAWN) || (file <= c.FILE_G && this.board[rank + 1][file + 1] === c.B_PAWN))) {
             return true;
         }
 
@@ -1005,7 +1005,7 @@ class Game {
         if ((rank <= c.RANK_6 && ((file >= c.FILE_B && this.board[rank + 2][file - 1] === c.B_KNIGHT) || (file <= c.FILE_G && this.board[rank + 2][file + 1] === c.B_KNIGHT))) ||
             (rank >= c.RANK_3 && ((file >= c.FILE_B && this.board[rank - 2][file - 1] === c.B_KNIGHT) || (file <= c.FILE_G && this.board[rank - 2][file + 1] === c.B_KNIGHT))) ||
             (file >= c.FILE_C && ((rank >= c.RANK_2 && this.board[rank - 1][file - 2] === c.B_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file - 2] === c.B_KNIGHT))) ||
-            (file <= c.FILE_F && ((rank <= c.RANK_7 && this.board[rank + 1][file - 2] === c.B_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file + 2] === c.B_KNIGHT)))) {
+            (file <= c.FILE_F && ((rank >= c.RANK_2 && this.board[rank - 1][file + 2] === c.B_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file + 2] === c.B_KNIGHT)))) {
             return true;
         }
 
@@ -1017,6 +1017,10 @@ class Game {
             if (this.board[rank + dist][file - dist] === c.B_BISHOP || this.board[rank + dist][file - dist] === c.B_QUEEN) {
                 return true;
             }
+            // If we encounter black piece that is not bishop or queen, the diagonal is blocked.
+            if (isPieceBlack(this.board[rank + dist][file - dist])) {
+                break;
+            }
         }
         for (let dist = 1; file - dist >= c.FILE_A && rank - dist >= c.RANK_1; dist++) { // from south-west
             if (isPieceWhite(this.board[rank - dist][file - dist])) {
@@ -1024,6 +1028,10 @@ class Game {
             }
             if (this.board[rank - dist][file - dist] === c.B_BISHOP || this.board[rank - dist][file - dist] === c.B_QUEEN) {
                 return true;
+            }
+            // If we encounter black piece that is not bishop or queen, the diagonal is blocked.
+            if (isPieceBlack(this.board[rank - dist][file - dist])) {
+                break;
             }
         }
         for (let dist = 1; file + dist <= c.FILE_H && rank - dist >= c.RANK_1; dist++) { // from south-east
@@ -1033,6 +1041,10 @@ class Game {
             if (this.board[rank - dist][file + dist] === c.B_BISHOP || this.board[rank - dist][file + dist] === c.B_QUEEN) {
                 return true;
             }
+            // If we encounter black piece that is not bishop or queen, the diagonal is blocked.
+            if (isPieceBlack(this.board[rank - dist][file + dist])) {
+                break;
+            }
         }
         for (let dist = 1; file + dist <= c.FILE_H && rank + dist <= c.RANK_8; dist++) { // from north-east
             if (isPieceWhite(this.board[rank + dist][file + dist])) {
@@ -1040,6 +1052,10 @@ class Game {
             }
             if (this.board[rank + dist][file + dist] === c.B_BISHOP || this.board[rank + dist][file + dist] === c.B_QUEEN) {
                 return true;
+            }
+            // If we encounter black piece that is not bishop or queen, the diagonal is blocked.
+            if (isPieceBlack(this.board[rank + dist][file + dist])) {
+                break;
             }
         }
 
@@ -1051,6 +1067,9 @@ class Game {
             if (this.board[rank + dist][file] === c.B_ROOK || this.board[rank + dist][file] === c.B_QUEEN) {
                 return true;
             }
+            if (isPieceBlack(this.board[rank + dist][file])) {
+                break;
+            }
         }
         for (let dist = 1; file - dist >= c.FILE_A; dist++) { // from west
             if (isPieceWhite(this.board[rank][file - dist])) {
@@ -1058,6 +1077,9 @@ class Game {
             }
             if (this.board[rank][file - dist] === c.B_ROOK || this.board[rank][file - dist] === c.B_QUEEN) {
                 return true;
+            }
+            if (isPieceBlack(this.board[rank][file - dist])) {
+                break;
             }
         }
         for (let dist = 1; rank - dist >= c.RANK_1; dist++) { // from south
@@ -1067,6 +1089,9 @@ class Game {
             if (this.board[rank - dist][file] === c.B_ROOK || this.board[rank - dist][file] === c.B_QUEEN) {
                 return true;
             }
+            if (isPieceBlack(this.board[rank - dist][file])) {
+                break;
+            }
         }
         for (let dist = 1; file + dist <= c.FILE_H; dist++) { // from east
             if (isPieceWhite(this.board[rank][file + dist])) {
@@ -1074,6 +1099,9 @@ class Game {
             }
             if (this.board[rank][file + dist] === c.B_ROOK || this.board[rank][file + dist] === c.B_QUEEN) {
                 return true;
+            }
+            if (isPieceBlack(this.board[rank][file + dist])) {
+                break;
             }
         }
 
@@ -1090,7 +1118,7 @@ class Game {
         const rank = this.kingsPosition.black.rank;
 
         // Attacked by pawn?
-        if (rank >= c.RANK_3 && ((file >= c.FILE_B && this.board[file - 1][rank - 1] === c.W_PAWN) || (file <= c.FILE_G && this.board[file + 1][rank - 1] === c.W_PAWN))) {
+        if (rank >= c.RANK_3 && ((file >= c.FILE_B && this.board[rank - 1][file - 1] === c.W_PAWN) || (file <= c.FILE_G && this.board[rank - 1][file + 1] === c.W_PAWN))) {
             return true;
         }
 
@@ -1098,7 +1126,7 @@ class Game {
         if ((rank <= c.RANK_6 && ((file >= c.FILE_B && this.board[rank + 2][file - 1] === c.W_KNIGHT) || (file <= c.FILE_G && this.board[rank + 2][file + 1] === c.W_KNIGHT))) ||
             (rank >= c.RANK_3 && ((file >= c.FILE_B && this.board[rank - 2][file - 1] === c.W_KNIGHT) || (file <= c.FILE_G && this.board[rank - 2][file + 1] === c.W_KNIGHT))) ||
             (file >= c.FILE_C && ((rank >= c.RANK_2 && this.board[rank - 1][file - 2] === c.W_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file - 2] === c.W_KNIGHT))) ||
-            (file <= c.FILE_F && ((rank <= c.RANK_7 && this.board[rank + 1][file - 2] === c.W_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file + 2] === c.W_KNIGHT)))) {
+            (file <= c.FILE_F && ((rank >= c.RANK_2 && this.board[rank - 1][file + 2] === c.W_KNIGHT) || (rank <= c.RANK_7 && this.board[rank + 1][file + 2] === c.W_KNIGHT)))) {
             return true;
         }
 
@@ -1110,6 +1138,10 @@ class Game {
             if (this.board[rank + dist][file - dist] === c.W_BISHOP || this.board[rank + dist][file - dist] === c.W_QUEEN) {
                 return true;
             }
+            // If we encounter white piece that is not bishop or queen, the diagonal is also blocked.
+            if (isPieceWhite(this.board[rank + dist][file - dist])) {
+                break;
+            }
         }
         for (let dist = 1; file - dist >= c.FILE_A && rank - dist >= c.RANK_1; dist++) { // from south-west
             if (isPieceBlack(this.board[rank - dist][file - dist])) {
@@ -1117,6 +1149,10 @@ class Game {
             }
             if (this.board[rank - dist][file - dist] === c.W_BISHOP || this.board[rank - dist][file - dist] === c.W_QUEEN) {
                 return true;
+            }
+            // If we encounter white piece that is not bishop or queen, the diagonal is also blocked.
+            if (isPieceWhite(this.board[rank - dist][file - dist])) {
+                break;
             }
         }
         for (let dist = 1; file + dist <= c.FILE_H && rank - dist >= c.RANK_1; dist++) { // from south-east
@@ -1126,6 +1162,10 @@ class Game {
             if (this.board[rank - dist][file + dist] === c.W_BISHOP || this.board[rank - dist][file + dist] === c.W_QUEEN) {
                 return true;
             }
+            // If we encounter white piece that is not bishop or queen, the diagonal is also blocked.
+            if (isPieceWhite(this.board[rank - dist][file + dist])) {
+                break;
+            }
         }
         for (let dist = 1; file + dist <= c.FILE_H && rank + dist <= c.RANK_8; dist++) { // from north-east
             if (isPieceBlack(this.board[rank + dist][file + dist])) {
@@ -1133,6 +1173,10 @@ class Game {
             }
             if (this.board[rank + dist][file + dist] === c.W_BISHOP || this.board[rank + dist][file + dist] === c.W_QUEEN) {
                 return true;
+            }
+            // If we encounter white piece that is not bishop or queen, the diagonal is also blocked.
+            if (isPieceWhite(this.board[rank + dist][file + dist])) {
+                break;
             }
         }
 
@@ -1144,6 +1188,9 @@ class Game {
             if (this.board[rank + dist][file] === c.W_ROOK || this.board[rank + dist][file] === c.W_QUEEN) {
                 return true;
             }
+            if (isPieceWhite(this.board[rank + dist][file])) {
+                break;
+            }
         }
         for (let dist = 1; file - dist >= c.FILE_A; dist++) { // from west
             if (isPieceBlack(this.board[rank][file - dist])) {
@@ -1151,6 +1198,9 @@ class Game {
             }
             if (this.board[rank][file - dist] === c.W_ROOK || this.board[rank][file - dist] === c.W_QUEEN) {
                 return true;
+            }
+            if (isPieceWhite(this.board[rank][file - dist])) {
+                break;
             }
         }
         for (let dist = 1; rank - dist >= c.RANK_1; dist++) { // from south
@@ -1160,6 +1210,9 @@ class Game {
             if (this.board[rank - dist][file] === c.W_ROOK || this.board[rank - dist][file] === c.W_QUEEN) {
                 return true;
             }
+            if (isPieceWhite(this.board[rank - dist][file])) {
+                break;
+            }
         }
         for (let dist = 1; file + dist <= c.FILE_H; dist++) { // from east
             if (isPieceBlack(this.board[rank][file + dist])) {
@@ -1168,9 +1221,22 @@ class Game {
             if (this.board[rank][file + dist] === c.W_ROOK || this.board[rank][file + dist] === c.W_QUEEN) {
                 return true;
             }
+            if (isPieceWhite(this.board[rank][file + dist])) {
+                break;
+            }
         }
 
         return false;
+    }
+
+    /**
+     * Set current position.
+     *
+     * @param {Array<Array<int>>} position - position we want the Game to have
+     * @returns {void}
+     */
+    setPosition(position) {
+        this.board = position;
     }
 
     /**
