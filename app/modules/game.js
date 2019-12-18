@@ -1091,13 +1091,89 @@ class Game {
      * @returns {boolean} is move legal?
      */
     isMoveLegal(move) {
-        let isLegal;
-
         switch (move) {
             case c.CASTLE_SHORT:
-                break;
+                if (this.whiteOnMove) {
+                    if (this.isWhiteKingAttacked()) {
+                        return false;
+                    }
+                    // Are squares king will pass attacked?
+                    this.kingsPosition.white.file = c.FILE_F;
+                    if (this.isWhiteKingAttacked()) {
+                        this.kingsPosition.white.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.white.file = c.FILE_G;
+                    if (this.isWhiteKingAttacked()) {
+                        this.kingsPosition.white.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.white.file = c.FILE_E;
+                    return true;
+                } else {
+                    if (this.isBlackKingAttacked()) {
+                        return false;
+                    }
+                    // Are squares king will pass attacked?
+                    this.kingsPosition.black.file = c.FILE_F;
+                    if (this.isBlackKingAttacked()) {
+                        this.kingsPosition.black.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.black.file = c.FILE_G;
+                    if (this.isBlackKingAttacked()) {
+                        this.kingsPosition.black.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.black.file = c.FILE_E;
+                    return true;
+                }
             case c.CASTLE_LONG:
-                break;
+                if (this.whiteOnMove) {
+                    if (this.isWhiteKingAttacked()) {
+                        return false;
+                    }
+                    // Are squares king will pass attacked?
+                    this.kingsPosition.white.file = c.FILE_D;
+                    if (this.isWhiteKingAttacked()) {
+                        this.kingsPosition.white.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.white.file = c.FILE_C;
+                    if (this.isWhiteKingAttacked()) {
+                        this.kingsPosition.white.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.white.file = c.FILE_B;
+                    if (this.isWhiteKingAttacked()) {
+                        this.kingsPosition.white.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.white.file = c.FILE_E;
+                    return true;
+                } else {
+                    if (this.isBlackKingAttacked()) {
+                        return false;
+                    }
+                    // Are squares king will pass attacked?
+                    this.kingsPosition.black.file = c.FILE_D;
+                    if (this.isBlackKingAttacked()) {
+                        this.kingsPosition.black.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.black.file = c.FILE_C;
+                    if (this.isBlackKingAttacked()) {
+                        this.kingsPosition.black.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.black.file = c.FILE_B;
+                    if (this.isBlackKingAttacked()) {
+                        this.kingsPosition.black.file = c.FILE_E;
+                        return false;
+                    }
+                    this.kingsPosition.black.file = c.FILE_E;
+                    return true;
+                }
             default:
                 // Mock make move.
                 const pieceOnMoveToSquare = this.board[move[3]][move[2]];
@@ -1112,6 +1188,7 @@ class Game {
                 }
 
                 // Check if king of the player on turn would be under attack after move.
+                let isLegal;
                 if (this.whiteOnMove) {
                     isLegal = !this.isWhiteKingAttacked();
                 } else {
@@ -1128,9 +1205,9 @@ class Game {
                     this.kingsPosition.black.file = move[0];
                     this.kingsPosition.black.rank = move[1];
                 }
-        }
 
-        return isLegal;
+                return isLegal;
+        }
     }
 
     /**
@@ -1386,14 +1463,21 @@ class Game {
     }
 
     /**
-     * Convert move from 4D or 5D array of board indices to UCI format.
+     * Convert move from 4D or 5D array of board indices (or castle notation) to UCI format.
      *
-     * @param {Array<int|string>} move - 4D or 5D vector representing move
+     * @param {Array<int|string>} move - 4D or 5D vector representing move, or castle notation
      * @returns {string} UCI representation of move
      */
     serializeMove(move) {
-        return parseLetterFile(move[0]) + parseLetterRank(move[1]) + parseLetterFile(move[2]) +
-            parseLetterRank(move[3]) + (move[4] !== undefined ? move[4].toLowerCase() : '');
+        switch (move) {
+            case c.CASTLE_SHORT:
+                return this.whiteOnMove ? 'e1g1' : 'e8g8';
+            case c.CASTLE_LONG:
+                return this.whiteOnMove ? 'e1c1' : 'e8c8';
+            default:
+                return parseLetterFile(move[0]) + parseLetterRank(move[1]) + parseLetterFile(move[2]) +
+                    parseLetterRank(move[3]) + (move[4] !== undefined ? move[4].toLowerCase() : '');
+        }
     }
 }
 
