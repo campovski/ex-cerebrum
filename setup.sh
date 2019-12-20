@@ -10,6 +10,9 @@ do
       INSTALL_NODE=0;;
     --no-dependency)
       INSTALL_DEPENDENCIES=0;;
+    --no-install)
+      INSTALL_NODE=0
+      INSTALL_DEPENDENCIES=0;;
   esac
 done
 
@@ -81,3 +84,5 @@ then
     return
   fi
 fi
+
+npm run build
