@@ -1,6 +1,6 @@
 {
   "name": "ex-cerebrum",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Chess bot that plays on Lichess.org",
   "main": "main.js",
   "scripts": {

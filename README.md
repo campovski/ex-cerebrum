@@ -3,8 +3,9 @@
 *ExCerebrum* in latin means "of brain" and the meaning of the name is that the moves as well as the bot itself are developed
 with great mind.
 
-ExCerebrum is a chess bot that plays on [Lichess.org](https://lichess.org). Profile of original bot (no forked or cloned versions of other users) is
-[ExCerebrum](https://lichess.org/@/excerebrum), the Lichess profile of the developer, me, is [Makedonium](https://lichess.org/@/Makedonium).
+ExCerebrum is a chess bot that plays on [Lichess.org](https://lichess.org). It only (for now) plays the standard chess, no variants.
+Profile of original bot (no forked or cloned versions of other users) is [ExCerebrum](https://lichess.org/@/excerebrum),
+and the Lichess profile of the developer, me, is [Makedonium](https://lichess.org/@/Makedonium).
 
 ## Idea behind the project
 
@@ -17,6 +18,19 @@ provide a good learning curve.
 
 Currently, chess engine is still in development phase and it plays random legal moves. The point of this is to first develop
 communication with Lichess, handling of events and legal move generation fully functional.
+
+## Plan for future
+
+At the start I will start on implementing a chess engine. This will be a long and tedious, yet fun and challenging, process.
+When this will be done, a bot will constantly run on my home server and players will be able to challenge it at any time.
+
+After this, I will most probably move to developing support for certain variants, first those that look the most like standard
+Chess, e.g. *King of the Hill* and *Antichess*. Variants like *Atomic* or *Racing Kings* would require to implement a different
+game logic (other legal moves in *RK* or exploding pieces in *Atomic* for example). In few years time, I hope I will support
+all of the variants. Yes, in few years, I have a lot of other work to do as well ;).
+
+Then, the frontend will come in plan, probably, maybe... The idea is that the bot would have its own website, however it might
+happen that this will be just a really basic website, just so that I still need webpack and can learn something new about it.  
 
 ## Setup
 
